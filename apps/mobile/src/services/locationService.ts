@@ -1,0 +1,47 @@
+import * as Location from "expo-location";
+import { LOCATION_UPDATE_MS } from "@futonav/shared";
+import { useLocationStore } from "../stores/useLocationStore";
+
+let subscription: Location.LocationSubscription | null = null;
+
+export async function requestPermission(): Promise<boolean> {
+  const { status } = await Location.requestForegroundPermissionsAsync();
+  const granted = status === "granted";
+  useLocationStore.getState().setPermissionStatus(granted ? "granted" : "denied");
+  return granted;
+}
+
+export async function startWatching() {
+  if (subscription) return;
+
+  const granted = await requestPermission();
+  if (!granted) return;
+
+  subscription = await Location.watchPositionAsync(
+    {
+      accuracy: Location.Accuracy.High,
+      timeInterval: LOCATION_UPDATE_MS,
+      distanceInterval: 5,
+    },
+    (loc) => {
+      const { latitude, longitude } = loc.coords;
+      useLocationStore.getState().setCurrentPosition(
+        { latitude, longitude },
+        loc.coords.accuracy ?? 0,
+      );
+    },
+  );
+}
+
+export function stopWatching() {
+  subscription?.remove();
+  subscription = null;
+}
+
+export async function getCurrentLocation(): Promise<Location.LocationObject | null> {
+  try {
+    return await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+  } catch {
+    return null;
+  }
+}
