@@ -1,7 +1,7 @@
-import Fuse from "fuse.js";
+import Fuse, { type IFuseOptions } from "fuse.js";
 import type { Poi } from "@futonav/shared";
 
-const fuseOptions: Fuse.IFuseOptions<Poi> = {
+const fuseOptions: IFuseOptions<Poi> = {
   keys: [
     { name: "name", weight: 2 },
     { name: "tags", weight: 1 },

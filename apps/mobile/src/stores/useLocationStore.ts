@@ -1,5 +1,9 @@
 import { create } from "zustand";
-import type { LatLng } from "expo-location";
+
+interface LatLng {
+  latitude: number;
+  longitude: number;
+}
 
 interface LocationState {
   currentPosition: LatLng | null;

@@ -2,13 +2,25 @@
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": true,
+    "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
-      "@futonav/shared": ["../../packages/shared/src"],
-      "@futonav/core": ["../../packages/core/src"],
-      "@futonav/api-client": ["../../packages/api-client/src"]
+      "@/*": [
+        "./src/*"
+      ],
+      "@futonav/shared": [
+        "../../packages/shared/src"
+      ],
+      "@futonav/core": [
+        "../../packages/core/src"
+      ],
+      "@futonav/api-client": [
+        "../../packages/api-client/src"
+      ]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx"
+  ]
 }

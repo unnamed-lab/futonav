@@ -1,8 +1,8 @@
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useNavStore } from "../src/stores/useNavStore";
+import { useNavStore } from "../../src/stores/useNavStore";
 import { formatDistance, walkingEtaMinutes, haversineMeters } from "@futonav/core";
-import { useLocationStore } from "../src/stores/useLocationStore";
+import { useLocationStore } from "../../src/stores/useLocationStore";
 
 export default function PoiDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -33,7 +33,7 @@ export default function PoiDetailScreen() {
   if (!poi) {
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>POI not found</Text>
+        <Text style={styles.name}>POI not found</Text>
         <Text>ID: {id}</Text>
       </View>
     );
