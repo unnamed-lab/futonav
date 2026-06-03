@@ -55,5 +55,5 @@
 - [x] Init SQL combining roles, schema, and seed data
 - [x] Generated anon JWT key
 - [x] .env configured for local stack
-- [ ] Connect sqliteCache to MapScreen (replace PLACEHOLDER_POIS)
+- [x] Connect sqliteCache to MapScreen (replace PLACEHOLDER_POIS)
 - [ ] Verify mobile app launches with backend

@@ -17,12 +17,13 @@
     "@supabase/supabase-js": "^2.49.0",
     "expo": "~56.0.8",
     "expo-router": "~56.2.0",
+    "expo-sqlite": "^56.0.4",
     "fuse.js": "^7.1.0",
     "react": "19.2.3",
     "react-native": "0.85.3",
     "react-native-maps": "^1.21.0",
-    "zustand": "^5.0.0",
-    "zod": "^3.24.0"
+    "zod": "^3.24.0",
+    "zustand": "^5.0.0"
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
