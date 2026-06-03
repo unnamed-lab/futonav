@@ -57,3 +57,11 @@
 - [x] .env configured for local stack
 - [x] Connect sqliteCache to MapScreen (replace PLACEHOLDER_POIS)
 - [ ] Verify mobile app launches with backend
+
+## Phase J — Admin panel (Next.js)
+- [ ] Scaffold Next.js app in apps/admin
+- [ ] Add admin turbo.json task
+- [ ] POI CRUD pages (list, create, edit, delete)
+- [ ] CSV bulk import page
+- [ ] Connect to local Supabase backend
+- [ ] Basic auth (optional)
