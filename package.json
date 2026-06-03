@@ -1,0 +1,28 @@
+{
+  "name": "futonav",
+  "version": "0.0.1",
+  "private": true,
+  "description": "FUTO Smart Navigation System — monorepo",
+  "scripts": {
+    "dev:mobile": "turbo run dev --filter=mobile",
+    "dev:admin": "turbo run dev --filter=admin",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "db:reset": "supabase db reset",
+    "db:seed": "tsx scripts/validate-pois.ts && supabase db reset && tsx scripts/seed.ts",
+    "format": "prettier --write \"**/*.{ts,tsx,json,yaml}\""
+  },
+  "devDependencies": {
+    "turbo": "^2.4.0",
+    "typescript": "^5.7.0",
+    "tsx": "^4.19.0",
+    "prettier": "^3.4.0"
+  },
+  "packageManager": "pnpm@11.0.8",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=11.0.0"
+  }
+}
