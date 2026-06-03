@@ -1,0 +1,32 @@
+{
+  "name": "@futonav/mobile",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "lint": "expo lint",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@futonav/api-client": "workspace:*",
+    "@futonav/core": "workspace:*",
+    "@futonav/shared": "workspace:*",
+    "@supabase/supabase-js": "^2.49.0",
+    "expo": "~56.0.8",
+    "expo-router": "~56.2.0",
+    "fuse.js": "^7.1.0",
+    "react": "19.2.3",
+    "react-native": "0.85.3",
+    "react-native-maps": "^1.21.0",
+    "zustand": "^5.0.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/react": "~19.2.2",
+    "typescript": "~6.0.3"
+  },
+  "private": true
+}
