@@ -1,0 +1,45 @@
+import { StyleSheet } from "react-native";
+import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from "react-native-maps";
+import { FUTO_DEFAULT_REGION } from "@futonav/shared";
+import type { Poi } from "@futonav/shared";
+import { useLocationStore } from "../stores/useLocationStore";
+import { useNavStore } from "../stores/useNavStore";
+
+interface MapCanvasProps {
+  pois: Poi[];
+  onPoiPress: (poi: Poi) => void;
+}
+
+export function MapCanvas({ pois, onPoiPress }: MapCanvasProps) {
+  const currentPosition = useLocationStore((s) => s.currentPosition);
+  const { route, mode, selectedPoi } = useNavStore();
+
+  return (
+    <MapView
+      style={StyleSheet.absoluteFill}
+      provider={PROVIDER_GOOGLE}
+      initialRegion={FUTO_DEFAULT_REGION}
+      showsUserLocation
+      showsMyLocationButton
+    >
+      {pois.map((poi) => (
+        <Marker
+          key={poi.id}
+          coordinate={{ latitude: poi.latitude, longitude: poi.longitude }}
+          title={poi.name}
+          description={poi.description ?? undefined}
+          onPress={() => onPoiPress(poi)}
+          pinColor={mode === "navigating" && selectedPoi?.id === poi.id ? "blue" : "red"}
+        />
+      ))}
+
+      {route && mode === "navigating" && (
+        <Polyline
+          coordinates={route.polyline}
+          strokeColor="#0066CC"
+          strokeWidth={4}
+        />
+      )}
+    </MapView>
+  );
+}
