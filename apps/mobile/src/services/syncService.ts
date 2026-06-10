@@ -5,7 +5,7 @@ import { getSupabaseClient } from "@futonav/api-client";
 import { createPoiRepository } from "@futonav/api-client";
 import Constants from "expo-constants";
 import { BASELINE_POIS } from "../data/baselinePois";
-import { createSqliteSyncStore, getAllPois } from "./sqliteCache";
+import { createSqliteSyncStore, getAllPois, clearCache } from "./sqliteCache";
 
 const store = createSqliteSyncStore();
 
@@ -30,4 +30,8 @@ export async function syncPois(): Promise<{ synced: number; offline: boolean }> 
 
 export function getCachedPois(): Promise<Poi[]> {
   return getAllPois();
+}
+
+export async function clearLocalCache(): Promise<void> {
+  await clearCache();
 }

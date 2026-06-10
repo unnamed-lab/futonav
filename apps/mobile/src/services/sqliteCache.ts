@@ -88,11 +88,18 @@ function rowToPoi(row: Record<string, unknown>): Poi {
   };
 }
 
+export async function clearCache(): Promise<void> {
+  const database = await getDb();
+  await database.runAsync("delete from pois");
+  await database.runAsync("delete from meta where key = 'last_sync_at'");
+}
+
 export function createSqliteSyncStore() {
   return {
     getAll: getAllPois,
     upsert: upsertPois,
     getLastSyncAt,
     setLastSyncAt,
+    clearCache,
   };
 }

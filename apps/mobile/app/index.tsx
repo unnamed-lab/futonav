@@ -13,6 +13,7 @@ import { useSettingsStore } from "../src/stores/useSettingsStore";
 import { requestPermission, startWatching } from "../src/services/locationService";
 import { seedBaseline, getCachedPois } from "../src/services/syncService";
 import type { Poi } from "@futonav/shared";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function MapScreen() {
   const router = useRouter();
@@ -76,8 +77,12 @@ export default function MapScreen() {
         </>
       )}
 
-      <TouchableOpacity style={styles.settingsButton} onPress={() => router.push("/settings")}>
-        <Text style={styles.settingsIcon}>⚙</Text>
+      <TouchableOpacity
+        style={styles.settingsButton}
+        onPress={() => router.push("/settings")}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="settings-sharp" size={24} color="#0F172A" />
       </TouchableOpacity>
     </View>
   );
@@ -89,17 +94,18 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 40,
     right: 16,
-    backgroundColor: "#fff",
-    borderRadius: 30,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
     width: 48,
     height: 48,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
     elevation: 6,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
   },
-  settingsIcon: { fontSize: 22 },
 });

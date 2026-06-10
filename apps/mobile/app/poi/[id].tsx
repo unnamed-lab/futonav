@@ -43,7 +43,7 @@ export default function PoiDetailScreen() {
     <View style={styles.container}>
       <Text style={styles.name}>{poi.name}</Text>
       <Text style={styles.category}>{poi.category}</Text>
-      {poi.description && <Text style={styles.description}>{poi.description}</Text>}
+      {!!poi.description && <Text style={styles.description}>{poi.description}</Text>}
       <View style={styles.stats}>
         <Text style={styles.stat}>{formatDistance(dist)} away</Text>
         <Text style={styles.stat}>~{eta} min walk</Text>
