@@ -9,6 +9,9 @@ export default (): ExpoConfig => ({
   userInterfaceStyle: "light",
   ios: {
     supportsTablet: true,
+    config: {
+      googleMapsApiKey: process.env.GOOGLE_MAPS_IOS_KEY || process.env.EXPO_PUBLIC_GOOGLE_MAPS_KEY,
+    },
     infoPlist: {
       NSLocationWhenInUseUsageDescription:
         "FutoNav uses your location to show you on the campus map and calculate walking distances.",
@@ -20,6 +23,11 @@ export default (): ExpoConfig => ({
       foregroundImage: "./assets/android-icon-foreground.png",
       backgroundImage: "./assets/android-icon-background.png",
       monochromeImage: "./assets/android-icon-monochrome.png",
+    },
+    config: {
+      googleMaps: {
+        apiKey: process.env.GOOGLE_MAPS_ANDROID_KEY || process.env.EXPO_PUBLIC_GOOGLE_MAPS_KEY,
+      },
     },
     permissions: ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"],
   },
@@ -39,5 +47,6 @@ export default (): ExpoConfig => ({
   extra: {
     supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL,
     supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
+    googleMapsKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_KEY || process.env.GOOGLE_MAPS_ANDROID_KEY,
   },
 });

@@ -1,3 +1,8 @@
+import Constants from "expo-constants";
+
 export function getGoogleMapsKey(): string | undefined {
-  return process.env.EXPO_PUBLIC_GOOGLE_MAPS_KEY;
+  return (
+    (Constants.expoConfig?.extra?.googleMapsKey as string) ||
+    process.env.EXPO_PUBLIC_GOOGLE_MAPS_KEY
+  );
 }
