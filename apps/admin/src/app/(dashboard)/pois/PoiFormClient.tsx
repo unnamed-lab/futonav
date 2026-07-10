@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { savePoiAction } from "../../actions";
-import { ArrowLeft, Save, MapPin, Sparkles, Locate } from "lucide-react";
+import { ArrowLeft, Save, MapPin, Sparkles, Locate, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import type { Poi, PoiCategoryType } from "@futonav/shared";
 
@@ -33,12 +33,18 @@ export default function PoiFormClient({ poi }: PoiFormClientProps) {
     id: poi?.id || "",
     name: poi?.name || "",
     category: poi?.category || "Other",
-    latitude: poi?.latitude !== undefined ? String(poi.latitude) : "5.3920",
-    longitude: poi?.longitude !== undefined ? String(poi.longitude) : "7.0020",
+    latitude: poi?.latitude !== undefined ? String(poi.latitude) : "5.392000",
+    longitude: poi?.longitude !== undefined ? String(poi.longitude) : "7.002000",
     description: poi?.description || "",
     tags: poi?.tags ? poi.tags.join(", ") : "",
     imageUrl: poi?.imageUrl || "",
   });
+
+  // Out-of-bounds warning check (FUTO typical bounds)
+  const latVal = parseFloat(formData.latitude);
+  const lngVal = parseFloat(formData.longitude);
+  const isLatOutOfFuto = !isNaN(latVal) && (latVal < 5.37 || latVal > 5.41);
+  const isLngOutOfFuto = !isNaN(lngVal) && (lngVal < 6.98 || lngVal > 7.02);
 
   const handleGetCurrentLocation = () => {
     if (!navigator.geolocation) {
@@ -131,31 +137,31 @@ export default function PoiFormClient({ poi }: PoiFormClientProps) {
       <div className="flex items-center gap-4">
         <Link
           href="/pois"
-          className="p-2 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors shadow-sm cursor-pointer"
+          className="p-2.5 rounded-xl bg-white border border-slate-200/80 text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors shadow-2xs cursor-pointer"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-4.5 w-4.5" />
         </Link>
         <div>
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight leading-none">
             {poi ? "Edit Point of Interest" : "Add Point of Interest"}
           </h1>
-          <p className="text-slate-500 mt-1">
+          <p className="text-slate-500 mt-2 text-sm font-semibold">
             {poi ? "Modify details and coordinates of this POI." : "Create a new surveyed location on FUTO campus."}
           </p>
         </div>
       </div>
 
       {errorMsg && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-800">
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-800">
           {errorMsg}
         </div>
       )}
 
       {/* Form Card */}
-      <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-6">
+      <form onSubmit={handleSubmit} className="glass-panel bg-white border border-slate-200/80 rounded-2xl p-6 sm:p-8 space-y-6">
         {/* Name */}
         <div className="space-y-2">
-          <label htmlFor="name" className="text-sm font-bold text-slate-700">
+          <label htmlFor="name" className="text-sm font-bold text-slate-700 block">
             POI Name *
           </label>
           <input
@@ -166,14 +172,14 @@ export default function PoiFormClient({ poi }: PoiFormClientProps) {
             value={formData.name}
             onChange={handleChange}
             placeholder="e.g. School of Engineering and Engineering Technology"
-            className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:border-teal-500 transition-colors text-slate-900 font-semibold"
+            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:bg-white transition-all text-slate-800 font-semibold focus-ring-glow"
           />
         </div>
 
         <div className="grid gap-6 sm:grid-cols-2">
           {/* Category */}
           <div className="space-y-2">
-            <label htmlFor="category" className="text-sm font-bold text-slate-700">
+            <label htmlFor="category" className="text-sm font-bold text-slate-700 block">
               Category *
             </label>
             <select
@@ -181,7 +187,7 @@ export default function PoiFormClient({ poi }: PoiFormClientProps) {
               name="category"
               value={formData.category}
               onChange={handleChange}
-              className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-teal-500 transition-colors text-slate-900 font-semibold bg-white cursor-pointer"
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:bg-white transition-all text-slate-800 font-semibold cursor-pointer focus-ring-glow"
             >
               {CATEGORIES.map((cat) => (
                 <option key={cat} value={cat}>
@@ -193,7 +199,7 @@ export default function PoiFormClient({ poi }: PoiFormClientProps) {
 
           {/* Image URL */}
           <div className="space-y-2">
-            <label htmlFor="imageUrl" className="text-sm font-bold text-slate-700">
+            <label htmlFor="imageUrl" className="text-sm font-bold text-slate-700 block">
               Image URL (Optional)
             </label>
             <input
@@ -203,32 +209,32 @@ export default function PoiFormClient({ poi }: PoiFormClientProps) {
               value={formData.imageUrl}
               onChange={handleChange}
               placeholder="e.g. https://example.com/seet.jpg"
-              className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:border-teal-500 transition-colors text-slate-900 font-semibold"
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:bg-white transition-all text-slate-800 font-semibold focus-ring-glow"
             />
           </div>
         </div>
 
         {/* Coordinates */}
-        <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100 space-y-4">
-          <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200/60 space-y-4">
+          <div className="flex items-center justify-between flex-wrap gap-3">
             <div className="flex items-center gap-2 text-teal-700 font-bold text-sm">
-              <MapPin className="h-4 w-4" />
+              <MapPin className="h-4.5 w-4.5" />
               <span>Campus GPS Coordinates</span>
             </div>
             <button
               type="button"
               onClick={handleGetCurrentLocation}
               disabled={locating}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-teal-700 bg-teal-50 border border-teal-200/60 hover:bg-teal-100 hover:border-teal-300 px-3.5 py-2 rounded-xl transition-all cursor-pointer disabled:opacity-50 active:scale-95 shadow-sm"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-teal-700 bg-teal-50 border border-teal-200 hover:bg-teal-100/70 px-3.5 py-2 rounded-xl transition-all cursor-pointer disabled:opacity-50 active:scale-95 shadow-2xs"
             >
-              <Locate className={`h-3.5 w-3.5 ${locating ? "animate-spin text-teal-500" : "text-teal-600"}`} />
+              <Locate className={`h-4 w-4 ${locating ? "animate-spin text-teal-500" : "text-teal-650"}`} />
               <span>{locating ? "Locating..." : "Use Current Location"}</span>
             </button>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <label htmlFor="latitude" className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+              <label htmlFor="latitude" className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
                 Latitude *
               </label>
               <input
@@ -238,13 +244,23 @@ export default function PoiFormClient({ poi }: PoiFormClientProps) {
                 required
                 value={formData.latitude}
                 onChange={handleChange}
-                placeholder="e.g. 5.3915"
-                className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:border-teal-500 bg-white transition-colors text-slate-900 font-mono font-semibold"
+                placeholder="e.g. 5.391500"
+                className={`w-full px-4 py-3 border rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:bg-white transition-all font-mono font-semibold focus-ring-glow ${
+                  isLatOutOfFuto 
+                    ? "border-amber-300 bg-amber-50/30 text-amber-900" 
+                    : "border-slate-200 bg-white text-slate-800"
+                }`}
               />
+              {isLatOutOfFuto && (
+                <span className="text-[10px] text-amber-600 font-bold flex items-center gap-1 mt-1 leading-normal">
+                  <AlertTriangle className="h-3 w-3 shrink-0" />
+                  Outside typical FUTO boundaries (5.37 to 5.41).
+                </span>
+              )}
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="longitude" className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+              <label htmlFor="longitude" className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
                 Longitude *
               </label>
               <input
@@ -254,19 +270,29 @@ export default function PoiFormClient({ poi }: PoiFormClientProps) {
                 required
                 value={formData.longitude}
                 onChange={handleChange}
-                placeholder="e.g. 7.0025"
-                className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:border-teal-500 bg-white transition-colors text-slate-900 font-mono font-semibold"
+                placeholder="e.g. 7.002500"
+                className={`w-full px-4 py-3 border rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:bg-white transition-all font-mono font-semibold focus-ring-glow ${
+                  isLngOutOfFuto 
+                    ? "border-amber-300 bg-amber-50/30 text-amber-900" 
+                    : "border-slate-200 bg-white text-slate-800"
+                }`}
               />
+              {isLngOutOfFuto && (
+                <span className="text-[10px] text-amber-600 font-bold flex items-center gap-1 mt-1 leading-normal">
+                  <AlertTriangle className="h-3 w-3 shrink-0" />
+                  Outside typical FUTO boundaries (6.98 to 7.02).
+                </span>
+              )}
             </div>
           </div>
-          <p className="text-xs text-slate-400">
+          <p className="text-[10px] text-slate-400 font-medium leading-relaxed">
             FUTO coordinates fall around Latitude: 5.39xx and Longitude: 7.00xx. Please ensure accuracy for correct offline routing.
           </p>
         </div>
 
         {/* Description */}
         <div className="space-y-2">
-          <label htmlFor="description" className="text-sm font-bold text-slate-700">
+          <label htmlFor="description" className="text-sm font-bold text-slate-700 block">
             Description (Max 200 characters)
           </label>
           <textarea
@@ -277,17 +303,17 @@ export default function PoiFormClient({ poi }: PoiFormClientProps) {
             value={formData.description}
             onChange={handleChange}
             placeholder="e.g. SEET administrative building housing engineering school dean and labs."
-            className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:border-teal-500 transition-colors text-slate-900 font-semibold resize-none"
+            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:bg-white transition-all text-slate-800 font-semibold resize-none focus-ring-glow"
           />
         </div>
 
         {/* Tags */}
         <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <label htmlFor="tags" className="text-sm font-bold text-slate-700">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <label htmlFor="tags" className="text-sm font-bold text-slate-700 block">
               Fuzzy Search Tags
             </label>
-            <span className="inline-flex items-center gap-1 text-xs text-teal-600 font-bold bg-teal-50 px-2 py-0.5 rounded">
+            <span className="inline-flex items-center gap-1 text-[10px] text-teal-700 font-bold bg-teal-50 px-2 py-0.5 rounded">
               <Sparkles className="h-3 w-3" />
               Helps find abbreviations
             </span>
@@ -299,13 +325,13 @@ export default function PoiFormClient({ poi }: PoiFormClientProps) {
             value={formData.tags}
             onChange={handleChange}
             placeholder="e.g. SEET, engineering, dean, lecture hall"
-            className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:border-teal-500 transition-colors text-slate-900 font-semibold"
+            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:bg-white transition-all text-slate-800 font-semibold focus-ring-glow"
           />
-          <p className="text-xs text-slate-400">Separate search keywords and abbreviation codes using commas.</p>
+          <p className="text-[10px] text-slate-400 font-medium leading-relaxed">Separate search keywords and abbreviation codes using commas.</p>
         </div>
 
         {/* Buttons */}
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+        <div className="flex items-center justify-end gap-3 pt-5 border-t border-slate-100">
           <Link
             href="/pois"
             className="px-5 py-3 text-sm font-bold border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
@@ -315,9 +341,9 @@ export default function PoiFormClient({ poi }: PoiFormClientProps) {
           <button
             type="submit"
             disabled={isPending}
-            className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-5 py-3 text-sm font-bold text-white hover:bg-teal-700 transition-colors disabled:opacity-50 cursor-pointer"
+            className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-5 py-3 text-sm font-bold text-white hover:bg-teal-700 transition-colors disabled:opacity-50 cursor-pointer shadow-md shadow-teal-600/10"
           >
-            <Save className="h-4 w-4" />
+            <Save className="h-4.5 w-4.5" />
             <span>{isPending ? "Saving..." : "Save POI"}</span>
           </button>
         </div>
