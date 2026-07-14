@@ -10,6 +10,7 @@ export default (): ExpoConfig => ({
   icon: "./assets/icon.png",
   ios: {
     supportsTablet: true,
+    bundleIdentifier: "com.unnamedcodes.futonav",
     config: {
       googleMapsApiKey: process.env.GOOGLE_MAPS_IOS_KEY || process.env.EXPO_PUBLIC_GOOGLE_MAPS_KEY,
     },
@@ -19,6 +20,7 @@ export default (): ExpoConfig => ({
     },
   },
   android: {
+    package: "com.unnamedcodes.futonav",
     adaptiveIcon: {
       backgroundColor: "#E6F4FE",
       foregroundImage: "./assets/android-icon-foreground.png",
@@ -51,9 +53,13 @@ export default (): ExpoConfig => ({
     ],
     "expo-sqlite",
   ],
+  owner: "unnamedcodes",
   extra: {
     supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL,
     supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
     googleMapsKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_KEY || process.env.GOOGLE_MAPS_ANDROID_KEY,
+    eas: {
+      projectId: "935a43a7-aa4c-4af9-9d0a-c1bee9c8b4de",
+    },
   },
 });
