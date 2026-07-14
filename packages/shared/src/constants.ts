@@ -9,5 +9,7 @@ export const FUTO_DEFAULT_REGION = {
 };
 
 export const WALKING_SPEED_KMH = 5;
+export const BIKE_SPEED_KMH = 15;
+export const CAR_SPEED_KMH = 30;
 export const EARTH_RADIUS_M = 6_371_000;
 export const LOCATION_UPDATE_MS = 2_000;
