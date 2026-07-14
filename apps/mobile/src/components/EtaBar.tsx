@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet } from "react-native";
-import { formatDistance, walkingEtaMinutes, haversineMeters } from "@futonav/core";
+import { formatDistance, calculateEtaMinutes, haversineMeters } from "@futonav/core";
 import { useLocationStore } from "../stores/useLocationStore";
 import { useNavStore } from "../stores/useNavStore";
 import { Ionicons } from "@expo/vector-icons";
@@ -7,16 +7,17 @@ import { COLORS, FONTS, SHADOWS } from "../theme/theme";
 
 export function EtaBar() {
   const currentPosition = useLocationStore((s) => s.currentPosition);
-  const selectedPoi = useNavStore((s) => s.selectedPoi);
+  const { selectedPoi, transportMode, route } = useNavStore();
 
   if (!currentPosition || !selectedPoi) return null;
 
-  const dist = haversineMeters(
+  const straightLineDist = haversineMeters(
     { latitude: currentPosition.latitude, longitude: currentPosition.longitude },
     { latitude: selectedPoi.latitude, longitude: selectedPoi.longitude },
   );
 
-  const eta = walkingEtaMinutes(dist);
+  const displayDist = route ? route.distanceMeters : straightLineDist;
+  const displayEta = route ? route.etaMinutes : calculateEtaMinutes(straightLineDist, transportMode);
 
   return (
     <View style={styles.container}>
@@ -29,10 +30,14 @@ export function EtaBar() {
         </Text>
       </View>
       <View style={styles.timeCapsule}>
-        <Ionicons name="walk" size={14} color={COLORS.accent} />
-        <Text style={styles.etaText}>{eta} min</Text>
+        <Ionicons 
+          name={transportMode === "walking" ? "walk" : transportMode === "bike" ? "bicycle" : "car"} 
+          size={14} 
+          color={COLORS.accent} 
+        />
+        <Text style={styles.etaText}>{displayEta} min</Text>
         <Text style={styles.divider}>•</Text>
-        <Text style={styles.distText}>{formatDistance(dist)}</Text>
+        <Text style={styles.distText}>{formatDistance(displayDist)}</Text>
       </View>
     </View>
   );

@@ -1,7 +1,8 @@
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import type { Poi, PoiCategoryType } from "@futonav/shared";
-import { formatDistance, walkingEtaMinutes, haversineMeters } from "@futonav/core";
+import { formatDistance, calculateEtaMinutes, haversineMeters } from "@futonav/core";
 import { useLocationStore } from "../stores/useLocationStore";
+import { useNavStore } from "../stores/useNavStore";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS, FONTS, SHADOWS, CATEGORY_THEMES } from "../theme/theme";
 
@@ -12,15 +13,18 @@ interface PoiCardProps {
 
 export function PoiCard({ poi, onEnd }: PoiCardProps) {
   const currentPosition = useLocationStore((s) => s.currentPosition);
+  const { transportMode, setTransportMode, route } = useNavStore();
 
-  const dist = currentPosition
+  const straightLineDist = currentPosition
     ? haversineMeters(
         { latitude: currentPosition.latitude, longitude: currentPosition.longitude },
         { latitude: poi.latitude, longitude: poi.longitude },
       )
     : 0;
 
-  const eta = walkingEtaMinutes(dist);
+  const displayDist = route ? route.distanceMeters : straightLineDist;
+  const displayEta = route ? route.etaMinutes : calculateEtaMinutes(straightLineDist, transportMode);
+
   const theme = CATEGORY_THEMES[poi.category as PoiCategoryType] || CATEGORY_THEMES.Other;
 
   return (
@@ -33,23 +37,77 @@ export function PoiCard({ poi, onEnd }: PoiCardProps) {
       </View>
 
       <Text style={styles.name} numberOfLines={1}>{poi.name}</Text>
-      {!!poi.description && (
+      {poi.description ? (
         <Text style={styles.description} numberOfLines={2}>{poi.description}</Text>
-      )}
+      ) : null}
+
+      {/* Transit Vehicle Mode Selector */}
+      <View style={styles.modeSelector}>
+        <TouchableOpacity
+          style={[styles.modeButton, transportMode === "walking" && styles.modeButtonActive]}
+          onPress={() => setTransportMode("walking")}
+          activeOpacity={0.8}
+        >
+          <Ionicons 
+            name="walk" 
+            size={15} 
+            color={transportMode === "walking" ? COLORS.white : COLORS.textMuted} 
+          />
+          <Text style={[styles.modeButtonText, transportMode === "walking" && styles.modeButtonTextActive]}>
+            Walk
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.modeButton, transportMode === "bike" && styles.modeButtonActive]}
+          onPress={() => setTransportMode("bike")}
+          activeOpacity={0.8}
+        >
+          <Ionicons 
+            name="bicycle" 
+            size={15} 
+            color={transportMode === "bike" ? COLORS.white : COLORS.textMuted} 
+          />
+          <Text style={[styles.modeButtonText, transportMode === "bike" && styles.modeButtonTextActive]}>
+            Bike
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.modeButton, transportMode === "car" && styles.modeButtonActive]}
+          onPress={() => setTransportMode("car")}
+          activeOpacity={0.8}
+        >
+          <Ionicons 
+            name="car" 
+            size={15} 
+            color={transportMode === "car" ? COLORS.white : COLORS.textMuted} 
+          />
+          <Text style={[styles.modeButtonText, transportMode === "car" && styles.modeButtonTextActive]}>
+            Drive
+          </Text>
+        </TouchableOpacity>
+      </View>
 
       <View style={styles.statsContainer}>
         <View style={styles.statBox}>
           <Ionicons name="location" size={16} color={COLORS.textLight} />
-          <Text style={styles.statValue}>{formatDistance(dist)}</Text>
+          <Text style={styles.statValue}>{formatDistance(displayDist)}</Text>
           <Text style={styles.statLabel}>Distance</Text>
         </View>
 
         <View style={styles.divider} />
 
         <View style={styles.statBox}>
-          <Ionicons name="walk" size={16} color={COLORS.accent} />
-          <Text style={[styles.statValue, { color: COLORS.accent }]}>{eta} min</Text>
-          <Text style={styles.statLabel}>Walking ETA</Text>
+          <Ionicons 
+            name={transportMode === "walking" ? "walk" : transportMode === "bike" ? "bicycle" : "car"} 
+            size={16} 
+            color={COLORS.accent} 
+          />
+          <Text style={[styles.statValue, { color: COLORS.accent }]}>{displayEta} min</Text>
+          <Text style={styles.statLabel}>
+            {transportMode === "walking" ? "Walking ETA" : transportMode === "bike" ? "Biking ETA" : "Driving ETA"}
+          </Text>
         </View>
       </View>
 
@@ -103,6 +161,35 @@ const styles = StyleSheet.create({
     color: COLORS.textMuted,
     marginBottom: 16,
     lineHeight: 18,
+  },
+  modeSelector: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 16,
+  },
+  modeButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: COLORS.background,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    gap: 6,
+  },
+  modeButtonActive: {
+    backgroundColor: COLORS.accent,
+    borderColor: COLORS.accent,
+  },
+  modeButtonText: {
+    fontFamily: FONTS.semibold,
+    fontSize: 12,
+    color: COLORS.textMuted,
+  },
+  modeButtonTextActive: {
+    color: COLORS.white,
   },
   statsContainer: {
     flexDirection: "row",

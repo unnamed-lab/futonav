@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { StyleSheet, View, Text } from "react-native";
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from "react-native-maps";
 import { FUTO_DEFAULT_REGION } from "@futonav/shared";
@@ -29,6 +30,15 @@ const getShortName = (poi: Poi) => {
 export function MapCanvas({ pois, onPoiPress }: MapCanvasProps) {
   const { route, mode, selectedPoi } = useNavStore();
   const mapStyle = useSettingsStore((s) => s.mapStyle);
+  
+  // Track custom marker view updates to allow rendering of custom fonts/icons 
+  // before freezing the layout into a static image (fixes Android/iOS clipping bugs)
+  const [tracksView, setTracksView] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setTracksView(false), 2000);
+    return () => clearTimeout(timer);
+  }, [pois]);
 
   return (
     <MapView
@@ -50,7 +60,8 @@ export function MapCanvas({ pois, onPoiPress }: MapCanvasProps) {
             key={poi.id}
             coordinate={{ latitude: poi.latitude, longitude: poi.longitude }}
             onPress={() => onPoiPress(poi)}
-            tracksViewChanges={false}
+            tracksViewChanges={tracksView}
+            anchor={{ x: 0.5, y: 0.67 }}
           >
             <View style={styles.markerContainer}>
               <View
@@ -66,8 +77,20 @@ export function MapCanvas({ pois, onPoiPress }: MapCanvasProps) {
                   color={isSelected ? COLORS.white : theme.color}
                 />
               </View>
+              
+              {/* Custom Downward Pin Pointer */}
+              <View
+                style={[
+                  styles.markerPointer,
+                  { borderTopColor: theme.color },
+                ]}
+              />
+
               <View style={[styles.markerLabel, isSelected && styles.markerLabelActive]}>
-                <Text style={[styles.markerLabelText, isSelected && styles.markerLabelTextActive]}>
+                <Text 
+                  style={[styles.markerLabelText, isSelected && styles.markerLabelTextActive]}
+                  numberOfLines={1}
+                >
                   {label}
                 </Text>
               </View>
@@ -91,6 +114,8 @@ const styles = StyleSheet.create({
   markerContainer: {
     alignItems: "center",
     justifyContent: "center",
+    width: 80,
+    padding: 2,
   },
   markerBadge: {
     width: 28,
@@ -102,8 +127,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     ...SHADOWS.sm,
   },
+  markerPointer: {
+    width: 0,
+    height: 0,
+    backgroundColor: "transparent",
+    borderStyle: "solid",
+    borderLeftWidth: 4,
+    borderRightWidth: 4,
+    borderBottomWidth: 0,
+    borderTopWidth: 5,
+    borderLeftColor: "transparent",
+    borderRightColor: "transparent",
+    marginTop: -1.5,
+    marginBottom: 1.5,
+  },
   markerLabel: {
-    marginTop: 3,
     backgroundColor: "rgba(255, 255, 255, 0.95)",
     paddingHorizontal: 6,
     paddingVertical: 1.5,
