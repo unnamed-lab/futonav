@@ -21,7 +21,7 @@ export const PoiSchema = z.object({
   description: z.string().max(200).nullable(),
   tags: z.array(z.string()).default([]),
   imageUrl: z.string().url().nullable(),
-  updatedAt: z.string().datetime(),
+  updatedAt: z.string().datetime({ offset: true }),
 });
 
 export type Poi = z.infer<typeof PoiSchema>;
