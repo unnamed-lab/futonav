@@ -106,21 +106,21 @@ export default function MapScreen() {
     <View style={styles.container}>
       <MapCanvas pois={pois as Poi[]} onPoiPress={handlePoiSelect} />
 
-      {mode === "browse" && (
+      {mode === "browse" ? (
         <>
           <SearchBar onQueryChange={setQuery} />
-          {query.length > 0 && filteredPois.length > 0 && (
+          {query.length > 0 && filteredPois.length > 0 ? (
             <ResultsSheet results={filteredPois} onSelectPoi={handlePoiSelect} />
-          )}
+          ) : null}
         </>
-      )}
+      ) : null}
 
-      {mode === "navigating" && selectedPoi && (
+      {mode === "navigating" && selectedPoi ? (
         <>
           <EtaBar />
           <PoiCard poi={selectedPoi} onEnd={handleEndNavigation} />
         </>
-      )}
+      ) : null}
 
       <Animated.View
         {...panResponder.panHandlers}

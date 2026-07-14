@@ -99,13 +99,13 @@ export function MapCanvas({ pois, onPoiPress }: MapCanvasProps) {
         );
       })}
 
-      {route && mode === "navigating" && (
+      {route && mode === "navigating" ? (
         <Polyline
           coordinates={route.polyline}
           strokeColor={COLORS.accent}
           strokeWidth={5}
         />
-      )}
+      ) : null}
     </MapView>
   );
 }
