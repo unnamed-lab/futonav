@@ -12,6 +12,7 @@ import { useLocationStore } from "../src/stores/useLocationStore";
 import { useSettingsStore } from "../src/stores/useSettingsStore";
 import { requestPermission, startWatching } from "../src/services/locationService";
 import { seedBaseline, getCachedPois } from "../src/services/syncService";
+import { fetchGoogleRoute } from "../src/services/directionsService";
 import type { Poi } from "@futonav/shared";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS, SHADOWS } from "../src/theme/theme";
@@ -57,22 +58,46 @@ export default function MapScreen() {
   const filteredPois = useMemo(() => searchPois(query, pois), [query, pois]);
 
   useEffect(() => {
-    if (mode === "navigating" && selectedPoi && currentPosition) {
-      const routeResult = findRoute(currentPosition, {
-        latitude: selectedPoi.latitude,
-        longitude: selectedPoi.longitude,
-      });
+    let active = true;
 
-      const etaMinutes = calculateEtaMinutes(routeResult.distanceMeters, transportMode);
+    async function computeRoute() {
+      if (mode === "navigating" && selectedPoi && currentPosition) {
+        const start = currentPosition;
+        const end = {
+          latitude: selectedPoi.latitude,
+          longitude: selectedPoi.longitude,
+        };
 
-      setRoute({
-        polyline: routeResult.polyline,
-        distanceMeters: routeResult.distanceMeters,
-        etaMinutes,
-      });
-    } else {
-      setRoute(null);
+        const googleResult = await fetchGoogleRoute(start, end, transportMode);
+
+        if (!active) return;
+
+        if (googleResult) {
+          setRoute({
+            polyline: googleResult.polyline,
+            distanceMeters: googleResult.distanceMeters,
+            etaMinutes: googleResult.etaMinutes,
+          });
+        } else {
+          // Fallback to local Dijkstra routing
+          const localResult = findRoute(start, end, transportMode);
+          const etaMinutes = calculateEtaMinutes(localResult.distanceMeters, transportMode);
+          setRoute({
+            polyline: localResult.polyline,
+            distanceMeters: localResult.distanceMeters,
+            etaMinutes,
+          });
+        }
+      } else {
+        setRoute(null);
+      }
     }
+
+    computeRoute();
+
+    return () => {
+      active = false;
+    };
   }, [mode, selectedPoi, currentPosition, transportMode, setRoute]);
 
   useEffect(() => {
