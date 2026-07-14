@@ -1,4 +1,6 @@
-export const FUTO_CENTROID = { latitude: 5.3927, longitude: 7.0009 };
+// Centroid of 18 OpenStreetMap-verified campus buildings (Overpass API, 2026-07-14).
+// The previous value (5.3927, 7.0009) had no real buildings within ~1km of it.
+export const FUTO_CENTROID = { latitude: 5.3843, longitude: 6.9923 };
 
 export const FUTO_DEFAULT_REGION = {
   ...FUTO_CENTROID,

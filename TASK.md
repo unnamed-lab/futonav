@@ -65,3 +65,17 @@
 - [ ] CSV bulk import page
 - [ ] Connect to local Supabase backend
 - [ ] Basic auth (optional)
+
+## Phase K — Real campus POI survey
+- [x] Corrected FUTO_CENTROID: the original (5.3927, 7.0009) had no real buildings
+      within ~1km of it -- it was a fabricated grid center, not surveyed data.
+- [x] Added 18 OpenStreetMap-verified buildings (Overpass API, 2026-07-14) --
+      Admin Building, Architecture studios/department, Biochemistry, Entrepreneurial
+      Studies, GST (2 blocks), SAAT (2 buildings), SOES (6 buildings), SOSC Extension.
+- [ ] The original 10 Phase D placeholder POIs (Library, Senate, SEET, SMAT, SHT, SAAT,
+      SPGS, Student Affairs, Medical Centre) are still on the fabricated grid -- no OSM
+      or Places API data exists for them. Google Places API is blocked on the project's
+      current Maps key (legacy Places API not enabled; Places API (New) returns
+      API_KEY_SERVICE_BLOCKED) -- enable it in Google Cloud Console to unblock a lookup,
+      or get coordinates by dropping pins in Google Maps on-site.
+- [ ] Hostels, campus gates, and sports facilities have no POI entries at all yet.
