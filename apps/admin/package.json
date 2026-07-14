@@ -11,12 +11,12 @@
   "dependencies": {
     "@futonav/api-client": "workspace:*",
     "@futonav/shared": "workspace:*",
-    "@supabase/supabase-js": "^2.49.0",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.453.0",
     "next": "16.2.9",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "zod": "^3.24.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

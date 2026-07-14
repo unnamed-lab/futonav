@@ -1,4 +1,4 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { PostgrestClient } from "@supabase/postgrest-js";
 import { PoiSchema } from "@futonav/shared";
 import type { Poi } from "@futonav/shared";
 
@@ -30,7 +30,7 @@ function toRow(poi: any) {
   return row;
 }
 
-export function createPoiRepository(client: SupabaseClient) {
+export function createPoiRepository(client: PostgrestClient) {
   const TABLE = "pois";
 
   async function fetchAll(): Promise<Poi[]> {
@@ -49,7 +49,7 @@ export function createPoiRepository(client: SupabaseClient) {
     return (data || []).map(toPoi);
   }
 
-  async function upsert(poi: Partial<Poi> & Omit<Poi, "updatedAt">): Promise<Poi> {
+  async function upsert(poi: Omit<Poi, "id" | "updatedAt" | "imageUrl"> & Partial<Pick<Poi, "id" | "imageUrl">>): Promise<Poi> {
     const row = toRow(poi);
     const { data, error } = await client
       .from(TABLE)

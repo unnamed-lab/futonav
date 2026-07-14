@@ -1,10 +1,12 @@
-import { createClient } from "@supabase/supabase-js";
+import { PostgrestClient } from "@supabase/postgrest-js";
 
-let client: ReturnType<typeof createClient> | null = null;
+let client: PostgrestClient | null = null;
 
 export function getSupabaseClient(url: string, anonKey: string) {
   if (!client) {
-    client = createClient(url, anonKey);
+    client = new PostgrestClient(url, {
+      headers: { apikey: anonKey, Authorization: `Bearer ${anonKey}` },
+    });
   }
   return client;
 }

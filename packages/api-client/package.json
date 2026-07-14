@@ -6,6 +6,6 @@
   "types": "src/index.ts",
   "dependencies": {
     "@futonav/shared": "workspace:*",
-    "@supabase/supabase-js": "^2.49.0"
+    "@supabase/postgrest-js": "^2.49.0"
   }
 }
