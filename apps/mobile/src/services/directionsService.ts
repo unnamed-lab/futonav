@@ -86,7 +86,15 @@ export async function fetchGoogleRoute(
     const encodedPolyline = route.overview_polyline.points;
     const polyline = decodePolyline(encodedPolyline);
     const distanceMeters = leg.distance.value;
-    const etaMinutes = Math.max(1, Math.round(leg.duration.value / 60));
+    
+    let etaMinutes = Math.max(1, Math.round(leg.duration.value / 60));
+
+    // Add realistic campus buffer overheads
+    if (mode === "bike") {
+      etaMinutes += 1; // account for unlocking/locking/mounting
+    } else if (mode === "car") {
+      etaMinutes += 2; // account for startup/parking/walking from lot
+    }
 
     return {
       polyline,
