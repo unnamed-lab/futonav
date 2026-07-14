@@ -1,11 +1,12 @@
 import { getAdminPoiRepository } from "@/lib/db";
 import PoiTableClient from "./PoiTableClient";
 import { ShieldAlert } from "lucide-react";
+import type { Poi } from "@futonav/shared";
 
 export const dynamic = "force-dynamic";
 
 export default async function PoisPage() {
-  let pois = [];
+  let pois: Poi[] = [];
   let errorMsg = "";
 
   try {

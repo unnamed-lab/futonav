@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getAdminPoiRepository } from "@/lib/db";
-import { PoiCategory } from "@futonav/shared";
+import { PoiCategory, type PoiCategoryType } from "@futonav/shared";
 import { z } from "zod";
 
 const FormSchema = z.object({
@@ -57,7 +57,7 @@ export async function savePoiAction(formData: {
 
 export async function bulkImportAction(poisList: Array<{
   name: string;
-  category: string;
+  category: PoiCategoryType;
   latitude: number;
   longitude: number;
   description: string | null;
