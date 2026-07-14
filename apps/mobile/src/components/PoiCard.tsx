@@ -1,7 +1,6 @@
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import type { Poi, PoiCategoryType } from "@futonav/shared";
-import { formatDistance, walkingEtaMinutes } from "@futonav/core";
-import { haversineMeters } from "@futonav/core";
+import { formatDistance, walkingEtaMinutes, haversineMeters } from "@futonav/core";
 import { useLocationStore } from "../stores/useLocationStore";
 import { Ionicons } from "@expo/vector-icons";
 

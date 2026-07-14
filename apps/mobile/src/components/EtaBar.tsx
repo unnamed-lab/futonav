@@ -1,6 +1,5 @@
 import { View, Text, StyleSheet } from "react-native";
-import { formatDistance, walkingEtaMinutes } from "@futonav/core";
-import { haversineMeters } from "@futonav/core";
+import { formatDistance, walkingEtaMinutes, haversineMeters } from "@futonav/core";
 import { useLocationStore } from "../stores/useLocationStore";
 import { useNavStore } from "../stores/useNavStore";
 import { Ionicons } from "@expo/vector-icons";

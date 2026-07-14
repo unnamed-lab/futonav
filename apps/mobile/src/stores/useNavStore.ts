@@ -2,7 +2,7 @@ import { create } from "zustand";
 import type { Poi } from "@futonav/shared";
 
 interface RouteData {
-  polyline: Array<{ latitude: number; longitude: number }>;
+  polyline: { latitude: number; longitude: number }[];
   distanceMeters: number;
   etaMinutes: number;
 }

@@ -20,7 +20,7 @@ export default function SettingsScreen() {
       } else {
         Alert.alert("Sync Successful", `Successfully updated database. Synced ${result.synced} locations.`);
       }
-    } catch (error) {
+    } catch {
       Alert.alert("Error", "An unexpected error occurred during database synchronization.");
     } finally {
       setSyncing(false);
@@ -42,7 +42,7 @@ export default function SettingsScreen() {
               await clearLocalCache();
               await seedBaseline();
               Alert.alert("Reset Complete", "The local database cache was successfully reset.");
-            } catch (error) {
+            } catch {
               Alert.alert("Error", "Could not clear local database cache.");
             } finally {
               setClearing(false);

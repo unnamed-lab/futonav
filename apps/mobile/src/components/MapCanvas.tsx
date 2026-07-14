@@ -2,7 +2,6 @@ import { StyleSheet } from "react-native";
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from "react-native-maps";
 import { FUTO_DEFAULT_REGION } from "@futonav/shared";
 import type { Poi } from "@futonav/shared";
-import { useLocationStore } from "../stores/useLocationStore";
 import { useNavStore } from "../stores/useNavStore";
 import { useSettingsStore } from "../stores/useSettingsStore";
 
@@ -12,7 +11,6 @@ interface MapCanvasProps {
 }
 
 export function MapCanvas({ pois, onPoiPress }: MapCanvasProps) {
-  const currentPosition = useLocationStore((s) => s.currentPosition);
   const { route, mode, selectedPoi } = useNavStore();
   const mapStyle = useSettingsStore((s) => s.mapStyle);
 

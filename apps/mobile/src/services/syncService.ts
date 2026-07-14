@@ -1,8 +1,7 @@
 import type { Poi } from "@futonav/shared";
 import { runDeltaSync } from "@futonav/core";
 import type { SyncSource } from "@futonav/core";
-import { getSupabaseClient } from "@futonav/api-client";
-import { createPoiRepository } from "@futonav/api-client";
+import { getSupabaseClient, createPoiRepository } from "@futonav/api-client";
 import Constants from "expo-constants";
 import { BASELINE_POIS } from "../data/baselinePois";
 import { createSqliteSyncStore, getAllPois, clearCache } from "./sqliteCache";

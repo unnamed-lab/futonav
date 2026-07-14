@@ -1,8 +1,6 @@
 import { View, Text, FlatList, TouchableOpacity, StyleSheet } from "react-native";
-import { PoiCategory } from "@futonav/shared";
 import type { Poi, PoiCategoryType } from "@futonav/shared";
-import { formatDistance } from "@futonav/core";
-import { haversineMeters } from "@futonav/core";
+import { formatDistance, haversineMeters } from "@futonav/core";
 import { useLocationStore } from "../stores/useLocationStore";
 import { Ionicons } from "@expo/vector-icons";
 

@@ -1,5 +1,5 @@
-import { useEffect, useState, useCallback } from "react";
-import { View, TouchableOpacity, Text, StyleSheet } from "react-native";
+import { useEffect, useState, useMemo, useCallback } from "react";
+import { View, TouchableOpacity, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { searchPois } from "@futonav/core";
 import { MapCanvas } from "../src/components/MapCanvas";
@@ -7,7 +7,6 @@ import { SearchBar } from "../src/components/SearchBar";
 import { ResultsSheet } from "../src/components/ResultsSheet";
 import { PoiCard } from "../src/components/PoiCard";
 import { EtaBar } from "../src/components/EtaBar";
-import { useLocationStore } from "../src/stores/useLocationStore";
 import { useNavStore } from "../src/stores/useNavStore";
 import { useSettingsStore } from "../src/stores/useSettingsStore";
 import { requestPermission, startWatching } from "../src/services/locationService";
@@ -19,17 +18,16 @@ export default function MapScreen() {
   const router = useRouter();
   const onboardingSeen = useSettingsStore((s) => s.onboardingSeen);
   const { mode, selectedPoi, selectPoi, endNavigation } = useNavStore();
-  const currentPosition = useLocationStore((s) => s.currentPosition);
 
   const [query, setQuery] = useState("");
   const [pois, setPois] = useState<Poi[]>([]);
-  const [filteredPois, setFilteredPois] = useState<Poi[]>([]);
+  const filteredPois = useMemo(() => searchPois(query, pois), [query, pois]);
 
   useEffect(() => {
     if (!onboardingSeen) {
       router.replace("/onboarding");
     }
-  }, [onboardingSeen]);
+  }, [onboardingSeen, router]);
 
   useEffect(() => {
     seedBaseline().then(() =>
@@ -39,11 +37,6 @@ export default function MapScreen() {
       if (granted) startWatching();
     });
   }, []);
-
-  useEffect(() => {
-    const results = searchPois(query, pois);
-    setFilteredPois(results);
-  }, [query, pois]);
 
   const handlePoiSelect = useCallback(
     (poi: Poi) => {
