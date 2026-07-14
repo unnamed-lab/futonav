@@ -20,15 +20,25 @@ futonav/
 
 ## Getting started
 
+Google Maps (`PROVIDER_GOOGLE`) requires the API key to be linked into the native binary, which **Expo Go cannot do** — it's a generic prebuilt client with no way to embed your project's key. Use a dev client instead:
+
 ```bash
 pnpm install
-cd apps/mobile && npx expo start
+
+# one-time: build a dev client with the Maps key baked in
+cd apps/mobile
+eas build --profile development --platform android   # cloud build, no local Android SDK needed
+# or, with Android Studio installed locally:
+npx expo run:android
+
+# day-to-day: start the JS bundler and open it in the dev client you built above
+npx expo start --dev-client
 ```
 
 ## Tech stack
 
 - **App:** Expo SDK 56 / React Native 0.85 (New Architecture + Hermes)
-- **Map:** react-native-maps (Google provider, dev via Expo Go)
+- **Map:** react-native-maps (Google provider, requires a custom dev client — see Getting started)
 - **Backend:** Supabase (PostgreSQL, PostgREST, RLS)
 - **State:** Zustand
 - **Search:** Fuse.js (offline, fuzzy)
