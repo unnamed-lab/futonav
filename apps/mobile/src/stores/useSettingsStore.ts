@@ -10,7 +10,7 @@ interface SettingsState {
 }
 
 export const useSettingsStore = create<SettingsState>((set) => ({
-  mapStyle: "standard",
+  mapStyle: "satellite",
   units: "metric",
   onboardingSeen: false,
 

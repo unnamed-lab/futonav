@@ -3,6 +3,7 @@ import { useRouter } from "expo-router";
 import { useSettingsStore } from "../src/stores/useSettingsStore";
 import { requestPermission } from "../src/services/locationService";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { COLORS, FONTS, SHADOWS } from "../src/theme/theme";
 
 const { height } = Dimensions.get("window");
@@ -22,9 +23,14 @@ export default function OnboardingScreen() {
     <View style={styles.container}>
       <View style={styles.heroSection}>
         <View style={styles.logoOuterRing}>
-          <View style={styles.logoInnerRing}>
-            <Ionicons name="navigate" size={32} color={COLORS.accent} />
-          </View>
+          <LinearGradient
+            colors={[COLORS.accent, "#0F766E"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.logoInnerGradient}
+          >
+            <Ionicons name="navigate" size={36} color={COLORS.white} />
+          </LinearGradient>
         </View>
         <Text style={styles.title}>FutoNav</Text>
         <Text style={styles.subtitle}>
@@ -107,15 +113,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
   },
-  logoInnerRing: {
+  logoInnerGradient: {
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: COLORS.surface,
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: "rgba(13, 148, 136, 0.15)",
     ...SHADOWS.sm,
   },
   title: {

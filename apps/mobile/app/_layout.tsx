@@ -1,6 +1,7 @@
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { ActivityIndicator, View } from "react-native";
+import { useSettingsStore } from "../src/stores/useSettingsStore";
 import {
   useFonts,
   PlusJakartaSans_400Regular,
@@ -19,6 +20,8 @@ export default function RootLayout() {
     PlusJakartaSans_800ExtraBold,
   });
 
+  const mapStyle = useSettingsStore((s) => s.mapStyle);
+
   if (!fontsLoaded && !fontError) {
     return (
       <View style={{ flex: 1, backgroundColor: "#F8FAFC", justifyContent: "center", alignItems: "center" }}>
@@ -29,7 +32,7 @@ export default function RootLayout() {
 
   return (
     <>
-      <StatusBar style="dark" />
+      <StatusBar style={mapStyle === "satellite" ? "light" : "dark"} />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
         <Stack.Screen name="onboarding" />
