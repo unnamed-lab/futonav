@@ -1,8 +1,11 @@
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useNavStore } from "../../src/stores/useNavStore";
 import { formatDistance, walkingEtaMinutes, haversineMeters } from "@futonav/core";
 import { useLocationStore } from "../../src/stores/useLocationStore";
+import { COLORS, FONTS, SHADOWS, CATEGORY_THEMES } from "../../src/theme/theme";
+import { Ionicons } from "@expo/vector-icons";
+import type { PoiCategoryType } from "@futonav/shared";
 
 export default function PoiDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -22,6 +25,7 @@ export default function PoiDetailScreen() {
       : 0;
 
   const eta = walkingEtaMinutes(dist);
+  const theme = poi ? (CATEGORY_THEMES[poi.category as PoiCategoryType] || CATEGORY_THEMES.Other) : CATEGORY_THEMES.Other;
 
   const handleNavigate = () => {
     if (poi) {
@@ -32,47 +36,218 @@ export default function PoiDetailScreen() {
 
   if (!poi) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.name}>POI not found</Text>
-        <Text>ID: {id}</Text>
-      </View>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.container}>
+          <Text style={styles.errorText}>POI not found</Text>
+          <Text style={styles.errorSubtext}>ID: {id}</Text>
+          <TouchableOpacity style={styles.outlineButton} onPress={() => router.back()}>
+            <Text style={styles.outlineButtonText}>Back</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.name}>{poi.name}</Text>
-      <Text style={styles.category}>{poi.category}</Text>
-      {!!poi.description && <Text style={styles.description}>{poi.description}</Text>}
-      <View style={styles.stats}>
-        <Text style={styles.stat}>{formatDistance(dist)} away</Text>
-        <Text style={styles.stat}>~{eta} min walk</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        {/* Header Indicator / Category Badge */}
+        <View style={styles.header}>
+          <View style={[styles.badge, { backgroundColor: theme.color + "12" }]}>
+            <Ionicons name={theme.icon as any} size={14} color={theme.color} style={styles.badgeIcon} />
+            <Text style={[styles.badgeText, { color: theme.color }]}>{poi.category}</Text>
+          </View>
+          <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
+            <Ionicons name="close" size={20} color={COLORS.textMuted} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Title & Desc */}
+        <View style={styles.contentSection}>
+          <Text style={styles.name}>{poi.name}</Text>
+          {!!poi.description ? (
+            <Text style={styles.description}>{poi.description}</Text>
+          ) : (
+            <Text style={styles.descriptionMuted}>No description available for this campus location.</Text>
+          )}
+        </View>
+
+        {/* Metrics Section */}
+        <View style={styles.metricsContainer}>
+          <View style={styles.metricCard}>
+            <View style={styles.metricIconContainer}>
+              <Ionicons name="location" size={16} color={COLORS.textMuted} />
+            </View>
+            <Text style={styles.metricValue}>{formatDistance(dist)}</Text>
+            <Text style={styles.metricLabel}>Distance</Text>
+          </View>
+
+          <View style={styles.metricCard}>
+            <View style={[styles.metricIconContainer, { backgroundColor: "rgba(13, 148, 136, 0.08)" }]}>
+              <Ionicons name="walk" size={16} color={COLORS.accent} />
+            </View>
+            <Text style={[styles.metricValue, { color: COLORS.accent }]}>~{eta} min</Text>
+            <Text style={styles.metricLabel}>Walking ETA</Text>
+          </View>
+        </View>
+
+        {/* Buttons Section */}
+        <View style={styles.actionContainer}>
+          <TouchableOpacity style={styles.navigateButton} onPress={handleNavigate} activeOpacity={0.9}>
+            <Ionicons name="navigate" size={18} color={COLORS.white} style={{ marginRight: 6 }} />
+            <Text style={styles.navigateButtonText}>Start Navigation</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.outlineButton} onPress={() => router.back()} activeOpacity={0.8}>
+            <Text style={styles.outlineButtonText}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-      <TouchableOpacity style={styles.button} onPress={handleNavigate}>
-        <Text style={styles.buttonText}>Navigate</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-        <Text style={styles.backText}>Back</Text>
-      </TouchableOpacity>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 24, backgroundColor: "#fff" },
-  name: { fontSize: 24, fontWeight: "700", marginBottom: 4 },
-  category: { fontSize: 14, color: "#666", marginBottom: 12, textTransform: "uppercase" },
-  description: { fontSize: 15, color: "#444", marginBottom: 20, lineHeight: 22 },
-  stats: { flexDirection: "row", gap: 24, marginBottom: 32 },
-  stat: { fontSize: 18, fontWeight: "600", color: "#0066CC" },
-  button: {
-    backgroundColor: "#0066CC",
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: "center",
-    marginBottom: 12,
+  safeArea: {
+    flex: 1,
+    backgroundColor: COLORS.surface,
   },
-  buttonText: { color: "#fff", fontSize: 18, fontWeight: "600" },
-  backButton: { alignItems: "center", paddingVertical: 8 },
-  backText: { fontSize: 16, color: "#666" },
+  container: {
+    flex: 1,
+    padding: 24,
+    backgroundColor: COLORS.surface,
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  badge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 10,
+  },
+  badgeIcon: {
+    marginRight: 6,
+  },
+  badgeText: {
+    fontFamily: FONTS.bold,
+    fontSize: 12,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  closeButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: COLORS.background,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  contentSection: {
+    marginBottom: 28,
+  },
+  name: {
+    fontFamily: FONTS.bold,
+    fontSize: 24,
+    color: COLORS.primary,
+    lineHeight: 30,
+    letterSpacing: -0.5,
+  },
+  description: {
+    fontFamily: FONTS.medium,
+    fontSize: 14,
+    color: COLORS.textMuted,
+    marginTop: 12,
+    lineHeight: 22,
+  },
+  descriptionMuted: {
+    fontFamily: FONTS.regular,
+    fontSize: 14,
+    color: COLORS.textLight,
+    marginTop: 12,
+    fontStyle: "italic",
+  },
+  metricsContainer: {
+    flexDirection: "row",
+    gap: 16,
+    marginBottom: 36,
+  },
+  metricCard: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    alignItems: "center",
+    ...SHADOWS.sm,
+  },
+  metricIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: COLORS.border,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  metricValue: {
+    fontFamily: FONTS.bold,
+    fontSize: 16,
+    color: COLORS.textMain,
+  },
+  metricLabel: {
+    fontFamily: FONTS.medium,
+    fontSize: 11,
+    color: COLORS.textLight,
+    marginTop: 2,
+    textTransform: "uppercase",
+  },
+  actionContainer: {
+    gap: 12,
+  },
+  navigateButton: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 16,
+    paddingVertical: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    ...SHADOWS.md,
+  },
+  navigateButtonText: {
+    fontFamily: FONTS.bold,
+    color: COLORS.white,
+    fontSize: 16,
+  },
+  outlineButton: {
+    paddingVertical: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  outlineButtonText: {
+    fontFamily: FONTS.bold,
+    fontSize: 15,
+    color: COLORS.textMuted,
+  },
+  errorText: {
+    fontFamily: FONTS.bold,
+    fontSize: 18,
+    color: COLORS.error,
+    textAlign: "center",
+    marginTop: 40,
+  },
+  errorSubtext: {
+    fontFamily: FONTS.regular,
+    fontSize: 14,
+    color: COLORS.textLight,
+    textAlign: "center",
+    marginTop: 8,
+    marginBottom: 24,
+  },
 });
+

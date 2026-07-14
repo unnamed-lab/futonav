@@ -13,6 +13,7 @@ import { requestPermission, startWatching } from "../src/services/locationServic
 import { seedBaseline, getCachedPois } from "../src/services/syncService";
 import type { Poi } from "@futonav/shared";
 import { Ionicons } from "@expo/vector-icons";
+import { COLORS, SHADOWS } from "../src/theme/theme";
 
 export default function MapScreen() {
   const router = useRouter();
@@ -75,7 +76,7 @@ export default function MapScreen() {
         onPress={() => router.push("/settings")}
         activeOpacity={0.8}
       >
-        <Ionicons name="settings-sharp" size={24} color="#0F172A" />
+        <Ionicons name="settings" size={20} color={COLORS.primary} />
       </TouchableOpacity>
     </View>
   );
@@ -87,18 +88,14 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 40,
     right: 16,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: COLORS.surface,
     borderRadius: 16,
     width: 48,
     height: 48,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 6,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: COLORS.border,
+    ...SHADOWS.md,
   },
 });

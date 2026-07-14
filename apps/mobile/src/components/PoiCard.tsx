@@ -3,23 +3,12 @@ import type { Poi, PoiCategoryType } from "@futonav/shared";
 import { formatDistance, walkingEtaMinutes, haversineMeters } from "@futonav/core";
 import { useLocationStore } from "../stores/useLocationStore";
 import { Ionicons } from "@expo/vector-icons";
+import { COLORS, FONTS, SHADOWS, CATEGORY_THEMES } from "../theme/theme";
 
 interface PoiCardProps {
   poi: Poi;
   onEnd: () => void;
 }
-
-const CATEGORY_THEMES: Record<PoiCategoryType, { color: string; icon: keyof typeof Ionicons.glyphMap }> = {
-  Department: { color: "#0284C7", icon: "business-outline" },
-  Hostel: { color: "#0D9488", icon: "bed-outline" },
-  Admin: { color: "#4F46E5", icon: "ribbon-outline" },
-  Cafeteria: { color: "#D97706", icon: "cafe-outline" },
-  Gate: { color: "#475569", icon: "enter-outline" },
-  Sports: { color: "#16A34A", icon: "football-outline" },
-  Medical: { color: "#DC2626", icon: "medical-outline" },
-  Library: { color: "#7C3AED", icon: "book-outline" },
-  Other: { color: "#64748B", icon: "map-outline" },
-};
 
 export function PoiCard({ poi, onEnd }: PoiCardProps) {
   const currentPosition = useLocationStore((s) => s.currentPosition);
@@ -37,18 +26,20 @@ export function PoiCard({ poi, onEnd }: PoiCardProps) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <View style={[styles.badge, { backgroundColor: theme.color + "10" }]}>
-          <Ionicons name={theme.icon} size={14} color={theme.color} style={styles.badgeIcon} />
+        <View style={[styles.badge, { backgroundColor: theme.color + "12" }]}>
+          <Ionicons name={theme.icon as any} size={13} color={theme.color} style={styles.badgeIcon} />
           <Text style={[styles.badgeText, { color: theme.color }]}>{poi.category}</Text>
         </View>
       </View>
 
-      <Text style={styles.name}>{poi.name}</Text>
-      {!!poi.description && <Text style={styles.description}>{poi.description}</Text>}
+      <Text style={styles.name} numberOfLines={1}>{poi.name}</Text>
+      {!!poi.description && (
+        <Text style={styles.description} numberOfLines={2}>{poi.description}</Text>
+      )}
 
       <View style={styles.statsContainer}>
         <View style={styles.statBox}>
-          <Ionicons name="map-outline" size={18} color="#64748B" />
+          <Ionicons name="location" size={16} color={COLORS.textLight} />
           <Text style={styles.statValue}>{formatDistance(dist)}</Text>
           <Text style={styles.statLabel}>Distance</Text>
         </View>
@@ -56,14 +47,14 @@ export function PoiCard({ poi, onEnd }: PoiCardProps) {
         <View style={styles.divider} />
 
         <View style={styles.statBox}>
-          <Ionicons name="walk-outline" size={18} color="#0D9488" />
-          <Text style={[styles.statValue, { color: "#0D9488" }]}>{eta} min</Text>
+          <Ionicons name="walk" size={16} color={COLORS.accent} />
+          <Text style={[styles.statValue, { color: COLORS.accent }]}>{eta} min</Text>
           <Text style={styles.statLabel}>Walking ETA</Text>
         </View>
       </View>
 
-      <TouchableOpacity style={styles.button} onPress={onEnd} activeOpacity={0.8}>
-        <Ionicons name="close-circle-outline" size={20} color="#FFFFFF" style={styles.buttonIcon} />
+      <TouchableOpacity style={styles.button} onPress={onEnd} activeOpacity={0.85}>
+        <Ionicons name="close-circle" size={18} color={COLORS.white} style={styles.buttonIcon} />
         <Text style={styles.buttonText}>End Navigation</Text>
       </TouchableOpacity>
     </View>
@@ -76,16 +67,12 @@ const styles = StyleSheet.create({
     bottom: 40,
     left: 16,
     right: 16,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: COLORS.surface,
     borderRadius: 24,
-    padding: 24,
-    shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
-    elevation: 10,
+    padding: 20,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: COLORS.border,
+    ...SHADOWS.lg,
   },
   header: {
     flexDirection: "row",
@@ -99,17 +86,32 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   badgeIcon: { marginRight: 6 },
-  badgeText: { fontSize: 12, fontWeight: "600" },
-  name: { fontSize: 20, fontWeight: "800", color: "#0F172A", marginBottom: 6 },
-  description: { fontSize: 14, color: "#475569", marginBottom: 20, lineHeight: 20 },
+  badgeText: {
+    fontFamily: FONTS.bold,
+    fontSize: 11,
+    textTransform: "uppercase",
+  },
+  name: {
+    fontFamily: FONTS.bold,
+    fontSize: 18,
+    color: COLORS.primary,
+    marginBottom: 4,
+  },
+  description: {
+    fontFamily: FONTS.medium,
+    fontSize: 13,
+    color: COLORS.textMuted,
+    marginBottom: 16,
+    lineHeight: 18,
+  },
   statsContainer: {
     flexDirection: "row",
-    backgroundColor: "#F8FAFC",
+    backgroundColor: COLORS.background,
     borderRadius: 16,
-    paddingVertical: 14,
-    marginBottom: 20,
+    paddingVertical: 12,
+    marginBottom: 16,
     borderWidth: 1,
-    borderColor: "#F1F5F9",
+    borderColor: COLORS.borderLight,
   },
   statBox: {
     flex: 1,
@@ -118,32 +120,35 @@ const styles = StyleSheet.create({
   },
   divider: {
     width: 1,
-    backgroundColor: "#E2E8F0",
+    backgroundColor: COLORS.border,
   },
   statValue: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#0F172A",
-    marginTop: 6,
+    fontFamily: FONTS.bold,
+    fontSize: 15,
+    color: COLORS.textMain,
+    marginTop: 4,
   },
   statLabel: {
-    fontSize: 12,
-    color: "#64748B",
+    fontFamily: FONTS.medium,
+    fontSize: 10,
+    color: COLORS.textLight,
     marginTop: 2,
+    textTransform: "uppercase",
   },
   button: {
-    backgroundColor: "#F43F5E",
+    backgroundColor: COLORS.error,
     borderRadius: 16,
     paddingVertical: 14,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#F43F5E",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
+    ...SHADOWS.md,
   },
-  buttonIcon: { marginRight: 8 },
-  buttonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "700" },
+  buttonIcon: { marginRight: 6 },
+  buttonText: {
+    fontFamily: FONTS.bold,
+    color: COLORS.white,
+    fontSize: 15,
+  },
 });
+

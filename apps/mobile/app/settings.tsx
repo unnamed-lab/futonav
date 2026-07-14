@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, SafeAreaView } from "react-native";
 import { useRouter } from "expo-router";
 import { useSettingsStore } from "../src/stores/useSettingsStore";
 import { syncPois, clearLocalCache, seedBaseline } from "../src/services/syncService";
 import { Ionicons } from "@expo/vector-icons";
+import { COLORS, FONTS, SHADOWS } from "../src/theme/theme";
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -54,235 +55,254 @@ export default function SettingsScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      {/* Custom Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#0F172A" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Settings</Text>
-        <View style={{ width: 40 }} /> {/* spacer */}
-      </View>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        {/* Custom Header */}
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()} activeOpacity={0.8}>
+            <Ionicons name="arrow-back" size={20} color={COLORS.primary} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Settings</Text>
+          <View style={{ width: 36 }} /> {/* spacer */}
+        </View>
 
-      {/* Map Section */}
-      <Text style={styles.sectionTitle}>Map Configuration</Text>
-      <View style={styles.sectionCard}>
-        <Text style={styles.cardDesc}>Select your preferred map rendering style:</Text>
-        <View style={styles.mapSelectorContainer}>
+        {/* Map Section */}
+        <Text style={styles.sectionTitle}>Map Configuration</Text>
+        <View style={styles.sectionCard}>
+          <Text style={styles.cardDesc}>Select your preferred map rendering style:</Text>
+          
+          <View style={styles.segmentedContainer}>
+            <TouchableOpacity
+              style={[styles.segmentOption, mapStyle === "standard" && styles.segmentOptionActive]}
+              onPress={() => setMapStyle("standard")}
+              activeOpacity={0.8}
+            >
+              <Ionicons
+                name="map"
+                size={16}
+                color={mapStyle === "standard" ? COLORS.white : COLORS.textMuted}
+              />
+              <Text style={[styles.segmentOptionText, mapStyle === "standard" && styles.segmentOptionTextActive]}>
+                Standard
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.segmentOption, mapStyle === "satellite" && styles.segmentOptionActive]}
+              onPress={() => setMapStyle("satellite")}
+              activeOpacity={0.8}
+            >
+              <Ionicons
+                name="earth"
+                size={16}
+                color={mapStyle === "satellite" ? COLORS.white : COLORS.textMuted}
+              />
+              <Text style={[styles.segmentOptionText, mapStyle === "satellite" && styles.segmentOptionTextActive]}>
+                Satellite
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Cache Section */}
+        <Text style={styles.sectionTitle}>Database & Sync</Text>
+        <View style={styles.sectionCard}>
           <TouchableOpacity
-            style={[styles.mapOption, mapStyle === "standard" && styles.mapOptionActive]}
-            onPress={() => setMapStyle("standard")}
+            style={styles.settingsRow}
+            onPress={handleSync}
+            disabled={syncing || clearing}
+            activeOpacity={0.7}
           >
-            <Ionicons
-              name="map"
-              size={20}
-              color={mapStyle === "standard" ? "#0D9488" : "#64748B"}
-            />
-            <Text style={[styles.mapOptionText, mapStyle === "standard" && styles.mapOptionTextActive]}>
-              Standard
-            </Text>
+            <View style={styles.settingsRowLeft}>
+              <View style={[styles.rowIconContainer, { backgroundColor: "rgba(13, 148, 136, 0.08)" }]}>
+                {syncing ? (
+                  <ActivityIndicator size="small" color={COLORS.accent} />
+                ) : (
+                  <Ionicons name="sync" size={18} color={COLORS.accent} />
+                )}
+              </View>
+              <Text style={styles.settingsRowText}>Synchronize Database</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={COLORS.textLight} />
           </TouchableOpacity>
 
+          <View style={styles.divider} />
+
           <TouchableOpacity
-            style={[styles.mapOption, mapStyle === "satellite" && styles.mapOptionActive]}
-            onPress={() => setMapStyle("satellite")}
+            style={styles.settingsRow}
+            onPress={handleClearCache}
+            disabled={syncing || clearing}
+            activeOpacity={0.7}
           >
-            <Ionicons
-              name="earth"
-              size={20}
-              color={mapStyle === "satellite" ? "#0D9488" : "#64748B"}
-            />
-            <Text style={[styles.mapOptionText, mapStyle === "satellite" && styles.mapOptionTextActive]}>
-              Satellite
-            </Text>
+            <View style={styles.settingsRowLeft}>
+              <View style={[styles.rowIconContainer, { backgroundColor: "rgba(239, 68, 68, 0.08)" }]}>
+                {clearing ? (
+                  <ActivityIndicator size="small" color={COLORS.error} />
+                ) : (
+                  <Ionicons name="trash" size={18} color={COLORS.error} />
+                )}
+              </View>
+              <Text style={[styles.settingsRowText, { color: COLORS.error }]}>Reset Local Cache</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={COLORS.textLight} />
           </TouchableOpacity>
         </View>
-      </View>
 
-      {/* Cache Section */}
-      <Text style={styles.sectionTitle}>Database & Synchronization</Text>
-      <View style={styles.sectionCard}>
-        <Text style={styles.cardDesc}>
-          Ensure campus directories are up-to-date, or clear local storage.
-        </Text>
-
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={handleSync}
-          disabled={syncing || clearing}
-        >
-          {syncing ? (
-            <ActivityIndicator size="small" color="#0D9488" style={{ marginRight: 10 }} />
-          ) : (
-            <Ionicons name="sync-outline" size={20} color="#0D9488" style={{ marginRight: 10 }} />
-          )}
-          <Text style={[styles.actionButtonText, { color: "#0D9488" }]}>
-            {syncing ? "Syncing database..." : "Synchronize Database"}
-          </Text>
-        </TouchableOpacity>
-
-        <View style={styles.divider} />
-
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={handleClearCache}
-          disabled={syncing || clearing}
-        >
-          {clearing ? (
-            <ActivityIndicator size="small" color="#EF4444" style={{ marginRight: 10 }} />
-          ) : (
-            <Ionicons name="trash-outline" size={20} color="#EF4444" style={{ marginRight: 10 }} />
-          )}
-          <Text style={[styles.actionButtonText, { color: "#EF4444" }]}>
-            {clearing ? "Clearing cache..." : "Reset Local Cache"}
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Info Section */}
-      <Text style={styles.sectionTitle}>Application Info</Text>
-      <View style={[styles.sectionCard, styles.infoCard]}>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>App Name</Text>
-          <Text style={styles.infoValue}>FutoNav</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Version</Text>
-          <Text style={styles.infoValue}>1.0.0 (v1-Stable)</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Campus</Text>
-          <Text style={styles.infoValue}>FUTO Main Campus</Text>
-        </View>
-        <View style={[styles.infoRow, { borderBottomWidth: 0, paddingBottom: 0 }]}>
-          <Text style={styles.infoLabel}>Offline Maps</Text>
-          <Text style={styles.infoValue}>Enabled</Text>
+        {/* Info Section */}
+        <Text style={styles.sectionTitle}>Application Info</Text>
+        <View style={[styles.sectionCard, { paddingVertical: 8 }]}>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>App Name</Text>
+            <Text style={styles.infoValue}>FutoNav</Text>
+          </View>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Version</Text>
+            <Text style={styles.infoValue}>1.0.0 (v1-Stable)</Text>
+          </View>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Campus</Text>
+            <Text style={styles.infoValue}>FUTO Main Campus</Text>
+          </View>
+          <View style={[styles.infoRow, { borderBottomWidth: 0 }]}>
+            <Text style={styles.infoLabel}>Offline Maps</Text>
+            <Text style={styles.infoValue}>Enabled</Text>
+          </View>
         </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
   container: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
+    backgroundColor: COLORS.background,
     paddingHorizontal: 20,
-    paddingTop: 50,
+    paddingTop: 16,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 30,
+    marginBottom: 24,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: "#FFFFFF",
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: COLORS.surface,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    ...SHADOWS.sm,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: "800",
-    color: "#0F172A",
+    fontFamily: FONTS.bold,
+    fontSize: 18,
+    color: COLORS.primary,
   },
   sectionTitle: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#64748B",
+    fontFamily: FONTS.bold,
+    fontSize: 12,
+    color: COLORS.textMuted,
     textTransform: "uppercase",
-    letterSpacing: 1,
+    letterSpacing: 0.5,
     marginBottom: 8,
     marginLeft: 4,
   },
   sectionCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 20,
-    padding: 20,
+    backgroundColor: COLORS.surface,
+    borderRadius: 16,
+    padding: 16,
     marginBottom: 24,
-    shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 3,
     borderWidth: 1,
-    borderColor: "#F1F5F9",
+    borderColor: COLORS.borderLight,
+    ...SHADOWS.sm,
   },
   cardDesc: {
-    fontSize: 14,
-    color: "#64748B",
-    marginBottom: 16,
-    lineHeight: 20,
+    fontFamily: FONTS.medium,
+    fontSize: 13,
+    color: COLORS.textMuted,
+    marginBottom: 12,
   },
-  mapSelectorContainer: {
+  segmentedContainer: {
     flexDirection: "row",
-    gap: 12,
+    backgroundColor: COLORS.background,
+    borderRadius: 12,
+    padding: 4,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
-  mapOption: {
+  segmentOption: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
-    backgroundColor: "#F8FAFC",
-    borderWidth: 1.5,
-    borderColor: "#E2E8F0",
-    borderRadius: 12,
-    paddingVertical: 12,
+    paddingVertical: 10,
+    borderRadius: 8,
+    gap: 6,
   },
-  mapOptionActive: {
-    backgroundColor: "#F0FDFA",
-    borderColor: "#0D9488",
+  segmentOptionActive: {
+    backgroundColor: COLORS.primary,
   },
-  mapOptionText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#64748B",
+  segmentOptionText: {
+    fontFamily: FONTS.semibold,
+    fontSize: 13,
+    color: COLORS.textMuted,
   },
-  mapOptionTextActive: {
-    color: "#0D9488",
-    fontWeight: "700",
+  segmentOptionTextActive: {
+    color: COLORS.white,
   },
-  actionButton: {
+  settingsRow: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 12,
+    justifyContent: "space-between",
+    paddingVertical: 10,
   },
-  actionButtonText: {
-    fontSize: 15,
-    fontWeight: "600",
+  settingsRowLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  rowIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  settingsRowText: {
+    fontFamily: FONTS.semibold,
+    fontSize: 14,
+    color: COLORS.textMain,
   },
   divider: {
     height: 1,
-    backgroundColor: "#F1F5F9",
+    backgroundColor: COLORS.borderLight,
     marginVertical: 4,
-  },
-  infoCard: {
-    paddingVertical: 10,
   },
   infoRow: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#F1F5F9",
+    borderBottomColor: COLORS.borderLight,
   },
   infoLabel: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#64748B",
+    fontFamily: FONTS.medium,
+    fontSize: 13.5,
+    color: COLORS.textMuted,
   },
   infoValue: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#0F172A",
+    fontFamily: FONTS.bold,
+    fontSize: 13.5,
+    color: COLORS.textMain,
   },
 });
+

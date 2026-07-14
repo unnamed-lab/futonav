@@ -3,6 +3,7 @@ import { formatDistance, walkingEtaMinutes, haversineMeters } from "@futonav/cor
 import { useLocationStore } from "../stores/useLocationStore";
 import { useNavStore } from "../stores/useNavStore";
 import { Ionicons } from "@expo/vector-icons";
+import { COLORS, FONTS, SHADOWS } from "../theme/theme";
 
 export function EtaBar() {
   const currentPosition = useLocationStore((s) => s.currentPosition);
@@ -21,14 +22,14 @@ export function EtaBar() {
     <View style={styles.container}>
       <View style={styles.navCapsule}>
         <View style={styles.iconWrapper}>
-          <Ionicons name="navigate" size={16} color="#FFFFFF" />
+          <Ionicons name="navigate" size={14} color={COLORS.white} />
         </View>
         <Text style={styles.title} numberOfLines={1}>
           Navigating to {selectedPoi.name}
         </Text>
       </View>
       <View style={styles.timeCapsule}>
-        <Ionicons name="walk-outline" size={16} color="#0D9488" />
+        <Ionicons name="walk" size={14} color={COLORS.accent} />
         <Text style={styles.etaText}>{eta} min</Text>
         <Text style={styles.divider}>•</Text>
         <Text style={styles.distText}>{formatDistance(dist)}</Text>
@@ -48,60 +49,55 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   navCapsule: {
-    backgroundColor: "#0F172A",
-    borderRadius: 12,
+    backgroundColor: COLORS.primary,
+    borderRadius: 14,
     paddingHorizontal: 12,
     paddingVertical: 8,
     flexDirection: "row",
     alignItems: "center",
-    shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 6,
+    borderWidth: 1,
+    borderColor: COLORS.primaryLight,
+    ...SHADOWS.md,
   },
   iconWrapper: {
-    backgroundColor: "#0D9488",
+    backgroundColor: COLORS.accent,
     borderRadius: 8,
-    padding: 4,
+    padding: 5,
     marginRight: 10,
   },
   title: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "700",
+    color: COLORS.white,
+    fontFamily: FONTS.bold,
+    fontSize: 13,
     flex: 1,
   },
   timeCapsule: {
     alignSelf: "flex-start",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: COLORS.surface,
     borderRadius: 20,
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
     paddingVertical: 6,
     flexDirection: "row",
     alignItems: "center",
-    shadowColor: "#0F172A",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 4,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: COLORS.border,
+    ...SHADOWS.sm,
   },
   etaText: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#0D9488",
-    marginLeft: 6,
+    fontFamily: FONTS.bold,
+    fontSize: 13,
+    color: COLORS.accent,
+    marginLeft: 4,
   },
   divider: {
-    fontSize: 14,
-    color: "#94A3B8",
-    marginHorizontal: 8,
+    fontSize: 13,
+    color: COLORS.textLight,
+    marginHorizontal: 6,
   },
   distText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#475569",
+    fontFamily: FONTS.semibold,
+    fontSize: 13,
+    color: COLORS.textMuted,
   },
 });
+

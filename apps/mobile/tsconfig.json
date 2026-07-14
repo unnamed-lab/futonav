@@ -16,6 +16,9 @@
       ],
       "@futonav/api-client": [
         "../../packages/api-client/src"
+      ],
+      "expo-router": [
+        "./node_modules/expo-router/build/index.d.ts"
       ]
     }
   },
