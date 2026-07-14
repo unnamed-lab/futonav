@@ -7,6 +7,7 @@ export default (): ExpoConfig => ({
   version: "1.0.0",
   orientation: "portrait",
   userInterfaceStyle: "light",
+  icon: "./assets/icon.png",
   ios: {
     supportsTablet: true,
     config: {
@@ -24,6 +25,7 @@ export default (): ExpoConfig => ({
       backgroundImage: "./assets/android-icon-background.png",
       monochromeImage: "./assets/android-icon-monochrome.png",
     },
+    predictiveBackGestureEnabled: false,
     config: {
       googleMaps: {
         apiKey: process.env.GOOGLE_MAPS_ANDROID_KEY || process.env.EXPO_PUBLIC_GOOGLE_MAPS_KEY,
@@ -31,8 +33,13 @@ export default (): ExpoConfig => ({
     },
     permissions: ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"],
   },
+  web: {
+    favicon: "./assets/favicon.png",
+  },
   plugins: [
     "expo-router",
+    "expo-dev-client",
+    "expo-font",
     [
       "expo-location",
       {
