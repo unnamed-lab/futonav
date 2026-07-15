@@ -1,6 +1,7 @@
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useNavStore } from "../../src/stores/useNavStore";
+import { PoiImage } from "../../src/components/PoiImage";
 import { formatDistance, walkingEtaMinutes, haversineMeters } from "@futonav/core";
 import { useLocationStore } from "../../src/stores/useLocationStore";
 import { COLORS, FONTS, SHADOWS, CATEGORY_THEMES } from "../../src/theme/theme";
@@ -62,8 +63,11 @@ export default function PoiDetailScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* Building image (admin-uploaded) with graceful fallback */}
+        <PoiImage poi={poi} height={170} />
+
         {/* Title & Desc */}
-        <View style={styles.contentSection}>
+        <View style={[styles.contentSection, styles.contentSpacing]}>
           <Text style={styles.name}>{poi.name}</Text>
           {!!poi.description ? (
             <Text style={styles.description}>{poi.description}</Text>
@@ -149,6 +153,9 @@ const styles = StyleSheet.create({
   },
   contentSection: {
     marginBottom: 28,
+  },
+  contentSpacing: {
+    marginTop: 20,
   },
   name: {
     fontFamily: FONTS.bold,
