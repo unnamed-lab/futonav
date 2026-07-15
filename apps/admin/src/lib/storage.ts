@@ -61,34 +61,49 @@ async function ensureBucket(token: string): Promise<void> {
   }
 }
 
+export interface SignedImageUpload {
+  /** Absolute URL the browser PUTs the file bytes to (uploads directly to Supabase). */
+  uploadUrl: string;
+  /** Final public URL to persist as the POI's imageUrl. */
+  publicUrl: string;
+}
+
 /**
- * Uploads an image file to Supabase Storage and returns its public URL,
- * suitable for saving straight into a POI's imageUrl.
+ * Creates a short-lived signed upload URL so the browser can upload the image
+ * bytes directly to Supabase Storage, bypassing the server entirely. This
+ * avoids serverless request-body limits (e.g. Vercel's ~4.5MB Server Action cap)
+ * and never exposes the service key to the client.
  */
-export async function uploadPoiImage(file: File): Promise<string> {
+export async function createSignedImageUpload(mimeType: string): Promise<SignedImageUpload> {
+  const ext = MIME_EXTENSIONS[mimeType];
+  if (!ext) {
+    throw new Error("Unsupported image type. Use JPEG, PNG, WebP, GIF or AVIF.");
+  }
+
   const token = serviceToken();
   await ensureBucket(token);
 
-  const ext = MIME_EXTENSIONS[file.type] || "bin";
   const path = `${randomUUID()}.${ext}`;
-  const bytes = Buffer.from(await file.arrayBuffer());
-
-  const res = await fetch(`${supabaseUrl}/storage/v1/object/${BUCKET}/${path}`, {
+  const res = await fetch(`${supabaseUrl}/storage/v1/object/upload/sign/${BUCKET}/${path}`, {
     method: "POST",
-    headers: {
-      ...authHeaders(token),
-      "Content-Type": file.type || "application/octet-stream",
-      "x-upsert": "true",
-      "cache-control": "3600",
-    },
-    body: bytes,
+    headers: authHeaders(token),
   });
 
   if (!res.ok) {
-    throw new Error(`Image upload failed (${res.status}): ${await res.text()}`);
+    throw new Error(`Could not create signed upload URL (${res.status}): ${await res.text()}`);
   }
 
-  return `${supabaseUrl}/storage/v1/object/public/${BUCKET}/${path}`;
+  // Response: { url: "/object/upload/sign/<bucket>/<path>?token=..." } (relative).
+  const data = (await res.json()) as { url?: string };
+  if (!data.url) {
+    throw new Error("Signed upload URL was not returned by Storage.");
+  }
+
+  const relative = data.url.startsWith("/") ? data.url : `/${data.url}`;
+  return {
+    uploadUrl: `${supabaseUrl}/storage/v1${relative}`,
+    publicUrl: `${supabaseUrl}/storage/v1/object/public/${BUCKET}/${path}`,
+  };
 }
 
 /**

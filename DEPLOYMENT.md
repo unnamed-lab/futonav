@@ -50,10 +50,9 @@ write (admin).
   | `ADMIN_PASSWORD` | a strong password | Login. |
 
 - **Redeploy** after changing env vars (Vercel bakes `NEXT_PUBLIC_*` at build time).
-- ⚠️ **Upload size on Vercel**: Serverless functions cap the request body at
-  ~4.5 MB, but `next.config.ts` allows 8 MB Server Actions. Images under ~4 MB
-  upload fine; larger ones will fail *on Vercel* (they work when self-hosted).
-  For large images, switch to a client → Supabase signed-URL direct upload.
+- **Image uploads** go browser → Supabase directly via a signed upload URL
+  (only tiny metadata passes through the server), so Vercel's ~4.5 MB serverless
+  body limit does not apply. The service key stays server-side.
 
 ---
 

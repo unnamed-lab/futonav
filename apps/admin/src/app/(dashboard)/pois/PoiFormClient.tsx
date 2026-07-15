@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { savePoiAction, uploadPoiImageAction } from "../../actions";
+import { savePoiAction, createImageUploadUrlAction } from "../../actions";
 import {
   ArrowLeft,
   Save,
@@ -118,18 +118,27 @@ export default function PoiFormClient({ poi }: PoiFormClientProps) {
       setErrorMsg("Please choose an image file.");
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      setErrorMsg("Image is too large. Please choose a file under 5MB.");
+    if (file.size > 10 * 1024 * 1024) {
+      setErrorMsg("Image is too large. Please choose a file under 10MB.");
       return;
     }
 
     setUploading(true);
     setErrorMsg("");
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-      const url = await uploadPoiImageAction(fd);
-      setFormData((prev) => ({ ...prev, imageUrl: url }));
+      // Get a signed URL from the server (tiny request), then upload the bytes
+      // straight to Supabase Storage from the browser — this bypasses the
+      // serverless request-body limit so large images work.
+      const { uploadUrl, publicUrl } = await createImageUploadUrlAction(file.type);
+      const res = await fetch(uploadUrl, {
+        method: "PUT",
+        headers: { "content-type": file.type, "x-upsert": "true" },
+        body: file,
+      });
+      if (!res.ok) {
+        throw new Error(`Upload failed (${res.status}).`);
+      }
+      setFormData((prev) => ({ ...prev, imageUrl: publicUrl }));
     } catch (err) {
       const message = err instanceof Error ? err.message : "Image upload failed. Please try again.";
       setErrorMsg(message);

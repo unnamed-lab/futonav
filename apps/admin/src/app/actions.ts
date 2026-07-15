@@ -2,11 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { getAdminPoiRepository } from "@/lib/db";
-import { uploadPoiImage, deletePoiImage } from "@/lib/storage";
+import { deletePoiImage, createSignedImageUpload, type SignedImageUpload } from "@/lib/storage";
 import { PoiCategory, type PoiCategoryType } from "@futonav/shared";
 import { z } from "zod";
-
-const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5MB
 
 const FormSchema = z.object({
   id: z.string().uuid().optional(),
@@ -29,20 +27,16 @@ const FormSchema = z.object({
     .transform((v) => v || null),
 });
 
-export async function uploadPoiImageAction(formData: FormData): Promise<string> {
-  const file = formData.get("file");
-
-  if (!(file instanceof File) || file.size === 0) {
-    throw new Error("No image file was provided.");
+/**
+ * Returns a signed URL the browser uploads the image bytes to directly, so large
+ * images bypass the serverless request-body limit (e.g. Vercel's ~4.5MB cap).
+ * Only the small metadata request goes through the server.
+ */
+export async function createImageUploadUrlAction(mimeType: string): Promise<SignedImageUpload> {
+  if (!mimeType || !mimeType.startsWith("image/")) {
+    throw new Error("A valid image content type is required.");
   }
-  if (!file.type.startsWith("image/")) {
-    throw new Error("Uploaded file must be an image.");
-  }
-  if (file.size > MAX_IMAGE_BYTES) {
-    throw new Error("Image is too large. Please upload a file under 5MB.");
-  }
-
-  return uploadPoiImage(file);
+  return createSignedImageUpload(mimeType);
 }
 
 export async function deletePoiAction(id: string) {
