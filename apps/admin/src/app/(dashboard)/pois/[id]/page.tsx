@@ -17,8 +17,8 @@ export default async function EditPoiPage({ params }: EditPoiPageProps) {
     const repo = getAdminPoiRepository();
     const pois = await repo.fetchAll();
     poi = pois.find((p) => p.id === id) || null;
-  } catch (error: any) {
-    errorMsg = error.message || "Failed to load database POI.";
+  } catch (error) {
+    errorMsg = error instanceof Error ? error.message : "Failed to load database POI.";
   }
 
   if (errorMsg) {

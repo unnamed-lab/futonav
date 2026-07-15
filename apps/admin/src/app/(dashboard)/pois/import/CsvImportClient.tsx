@@ -57,8 +57,9 @@ export default function CsvImportClient() {
           setParsedPois(rows);
           setSuccessMsg(`Successfully parsed ${rows.length} points of interest from the file.`);
         }
-      } catch (err: any) {
-        setErrorMsg(err.message || "Failed to parse CSV file. Please check formatting.");
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Failed to parse CSV file. Please check formatting.";
+        setErrorMsg(message);
       }
     };
     reader.readAsText(file);
@@ -103,7 +104,6 @@ export default function CsvImportClient() {
 
       // Validate Category
       let normalizedCategory = categoryRaw;
-      // Capitalize first letter to match enum
       normalizedCategory = normalizedCategory.charAt(0).toUpperCase() + normalizedCategory.slice(1).toLowerCase();
       let isCategoryFallback = false;
       if (!CATEGORY_SET.has(normalizedCategory)) {
@@ -173,8 +173,9 @@ export default function CsvImportClient() {
         setFileName("");
         router.push("/pois");
         router.refresh();
-      } catch (err: any) {
-        setErrorMsg(err.message || "Failed to import points of interest.");
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Failed to import points of interest.";
+        setErrorMsg(message);
       }
     });
   };
@@ -197,21 +198,21 @@ export default function CsvImportClient() {
   return (
     <div className="space-y-8 animate-fadeIn">
       {/* Title */}
-      <div className="pb-6 border-b border-slate-200/80">
-        <h1 className="text-3xl font-black text-slate-900 tracking-tight leading-none">Bulk Import Locations</h1>
+      <div className="pb-6 border-b border-slate-200/60">
+        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight leading-none">Bulk Import Locations</h1>
         <p className="text-slate-500 mt-2 text-sm font-semibold">
           Upload a CSV file containing campus building survey results to synchronize directories.
         </p>
       </div>
 
       {/* Upload Box */}
-      <div className="glass-panel bg-white border border-slate-200/80 rounded-2xl p-6 sm:p-8 space-y-6">
+      <div className="glass-panel bg-white border border-slate-200/60 rounded-3xl p-6 sm:p-8 space-y-6 shadow-md">
         {!fileName ? (
-          <div className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-2xl p-10 bg-slate-50 hover:bg-slate-100/50 hover:border-teal-400 transition-all relative group cursor-pointer">
-            <Upload className="h-10 w-10 text-slate-400 mb-3 group-hover:text-teal-600 transition-colors" />
-            <h3 className="font-extrabold text-slate-700 text-sm">Select or Drag CSV File</h3>
-            <p className="text-slate-400 text-xs mt-1 font-medium">
-              Ensure headers are: name, category, latitude, longitude, description, tags
+          <div className="flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-2xl p-10 bg-slate-50/50 hover:bg-slate-100/50 hover:border-teal-400 transition-all relative group cursor-pointer">
+            <Upload className="h-10 w-10 text-slate-400 mb-3 group-hover:text-teal-650 group-hover:scale-105 transition-all duration-300" />
+            <h3 className="font-bold text-slate-700 text-sm">Select or Drag CSV File</h3>
+            <p className="text-slate-400 text-xs mt-1.5 font-medium">
+              Required headers: name, category, latitude, longitude, description, tags
             </p>
             <input
               type="file"
@@ -222,14 +223,14 @@ export default function CsvImportClient() {
             />
           </div>
         ) : (
-          <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-xl">
+          <div className="flex items-center justify-between p-4 bg-slate-50/50 border border-slate-200 rounded-xl">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-teal-50 text-teal-600 rounded-lg">
+              <div className="p-2.5 bg-teal-50 text-teal-650 rounded-lg border border-teal-150">
                 <FileText className="h-5 w-5" />
               </div>
               <div>
-                <span className="text-sm font-extrabold text-slate-800 block">{fileName}</span>
-                <span className="text-[10px] text-slate-400 font-bold block mt-0.5 uppercase">
+                <span className="text-sm font-bold text-slate-800 block">{fileName}</span>
+                <span className="text-[10px] text-slate-450 font-bold block mt-0.5 uppercase">
                   {parsedPois.length} locations parsed
                 </span>
               </div>
@@ -252,7 +253,7 @@ export default function CsvImportClient() {
         )}
 
         {successMsg && (
-          <div className="rounded-xl border border-teal-200 bg-teal-50 p-4 flex gap-2.5 items-start text-sm font-bold text-teal-800">
+          <div className="rounded-xl border border-teal-200 bg-teal-50 p-4 flex gap-2.5 items-start text-sm font-bold text-teal-800 animate-fadeIn">
             <CheckCircle className="h-5 w-5 shrink-0 text-teal-600 mt-0.5" />
             <span>{successMsg}</span>
           </div>
@@ -261,12 +262,12 @@ export default function CsvImportClient() {
         {/* Spreadsheet Preview */}
         {parsedPois.length > 0 && (
           <div className="space-y-4 pt-4 border-t border-slate-100">
-            <h3 className="font-extrabold text-sm text-slate-800 flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-teal-600 animate-pulse" />
-              <span>Import Data Preview & Warning Flags</span>
+            <h3 className="font-bold text-sm text-slate-800 flex items-center gap-2">
+              <Sparkles className="h-4.5 w-4.5 text-teal-650 animate-pulse" />
+              <span>Import Data Preview & Warnings check</span>
             </h3>
             
-            <div className="border border-slate-200 rounded-xl overflow-hidden shadow-2xs max-h-80 overflow-y-auto">
+            <div className="border border-slate-200/80 rounded-2xl overflow-hidden shadow-3xs max-h-80 overflow-y-auto">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200 font-bold text-slate-500">
@@ -283,21 +284,21 @@ export default function CsvImportClient() {
                     const isCoordinatesWarning = isOutOfFutoBounds(poi.latitude, poi.longitude);
                     const isWarning = isCoordinatesWarning || poi.isCategoryFallback;
                     return (
-                      <tr key={idx} className={`hover:bg-slate-50/50 transition-colors ${isWarning ? "bg-amber-50/[0.15]" : ""}`}>
+                      <tr key={idx} className={`hover:bg-slate-50/50 transition-colors ${isWarning ? "bg-amber-50/15" : ""}`}>
                         <td className="px-4 py-3 font-bold text-slate-800">{poi.name}</td>
                         <td className="px-4 py-3">
-                          <span className={`inline-flex items-center rounded px-2 py-0.5 text-[9px] font-bold border ${
+                          <span className={`inline-flex items-center rounded-lg px-2 py-0.5 text-[9px] font-bold border tracking-wide uppercase ${
                             poi.isCategoryFallback ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-slate-50 text-slate-600 border-slate-200"
                           }`}>
                             {poi.category}
                           </span>
                         </td>
-                        <td className="px-4 py-3 font-mono font-semibold text-slate-600">{poi.latitude.toFixed(6)}</td>
-                        <td className="px-4 py-3 font-mono font-semibold text-slate-600">{poi.longitude.toFixed(6)}</td>
+                        <td className="px-4 py-3 font-mono font-semibold text-slate-650">{poi.latitude.toFixed(6)}</td>
+                        <td className="px-4 py-3 font-mono font-semibold text-slate-655">{poi.longitude.toFixed(6)}</td>
                         <td className="px-4 py-3">
                           <div className="flex flex-wrap gap-1 max-w-xs">
                             {poi.tags.map(t => (
-                              <span key={t} className="bg-slate-50 text-slate-500 px-1.5 py-0.5 rounded text-[9px] border border-slate-200/50">
+                              <span key={t} className="bg-slate-50 text-slate-500 px-1.5 py-0.5 rounded-lg text-[9px] border border-slate-200/50">
                                 {t}
                               </span>
                             ))}
@@ -306,19 +307,19 @@ export default function CsvImportClient() {
                         <td className="px-4 py-3 text-right">
                           <div className="flex justify-end gap-1.5">
                             {isCoordinatesWarning && (
-                              <span className="inline-flex items-center gap-1 text-[9px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200" title="Outside typical FUTO bounds (5.37-5.41, 6.98-7.02)">
+                              <span className="inline-flex items-center gap-1 text-[9px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200" title="Outside typical FUTO bounds (5.37-5.41, 6.98-7.02)">
                                 <AlertTriangle className="h-3 w-3" />
                                 <span>Out of Bounds</span>
                               </span>
                             )}
                             {poi.isCategoryFallback && (
-                              <span className="inline-flex items-center gap-1 text-[9px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200" title="Category was unrecognized; defaulted to 'Other'">
+                              <span className="inline-flex items-center gap-1 text-[9px] font-bold text-amber-655 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200" title="Category unrecognized; defaulted to 'Other'">
                                 <AlertCircle className="h-3 w-3" />
-                                <span>Unrecognized Group</span>
+                                <span>Unrecognized</span>
                               </span>
                             )}
                             {!isWarning && (
-                              <span className="text-teal-600 font-bold text-[9px] uppercase">Valid</span>
+                              <span className="text-teal-605 font-bold text-[9px] uppercase tracking-wide">Ready</span>
                             )}
                           </div>
                         </td>
@@ -333,7 +334,7 @@ export default function CsvImportClient() {
               <button
                 onClick={handleImport}
                 disabled={isPending}
-                className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-6 py-3.5 text-sm font-bold text-white hover:bg-teal-700 transition-colors shadow-md shadow-teal-600/10 cursor-pointer"
+                className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-6 py-3.5 text-sm font-bold text-white hover:bg-teal-700 transition-colors shadow-md shadow-teal-600/10 cursor-pointer hover:shadow-teal-500/20 active:scale-[0.98]"
               >
                 <span>{isPending ? "Importing Data..." : `Import ${parsedPois.length} Locations`}</span>
                 <ArrowRight className="h-4.5 w-4.5" />
@@ -345,8 +346,8 @@ export default function CsvImportClient() {
 
       {/* CSV format guide */}
       <div className="grid gap-6 md:grid-cols-2">
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-6 space-y-3">
-          <h3 className="font-extrabold text-slate-900 text-sm flex items-center gap-2">
+        <div className="bg-white rounded-2xl border border-slate-200/60 p-6 space-y-3 shadow-xs">
+          <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
             <FileText className="h-4.5 w-4.5 text-slate-500" />
             <span>Example CSV Template</span>
           </h3>
@@ -357,12 +358,12 @@ University Library,Library,5.393500,7.001500,Main library,library;books`}
           </pre>
         </div>
 
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-6 space-y-4">
-          <h3 className="font-extrabold text-slate-900 text-sm flex items-center gap-2">
-            <HelpCircle className="h-4.5 w-4.5 text-teal-600" />
+        <div className="bg-white rounded-2xl border border-slate-200/60 p-6 space-y-4 shadow-xs">
+          <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
+            <HelpCircle className="h-4.5 w-4.5 text-teal-655" />
             <span>Formatting Guidelines</span>
           </h3>
-          <ul className="text-xs text-slate-500 space-y-2.5 list-disc pl-4 leading-relaxed font-medium">
+          <ul className="text-xs text-slate-500 space-y-2.5 list-disc pl-4 leading-relaxed font-semibold">
             <li>
               <strong>category</strong> must resolve to one of: <code className="bg-slate-100 px-1.5 py-0.5 rounded text-slate-700 font-bold">Department</code>, <code className="bg-slate-100 px-1.5 py-0.5 rounded text-slate-700 font-bold">Hostel</code>, <code className="bg-slate-100 px-1.5 py-0.5 rounded text-slate-700 font-bold">Admin</code>, <code className="bg-slate-100 px-1.5 py-0.5 rounded text-slate-700 font-bold">Cafeteria</code>, <code className="bg-slate-100 px-1.5 py-0.5 rounded text-slate-700 font-bold">Gate</code>, <code className="bg-slate-100 px-1.5 py-0.5 rounded text-slate-700 font-bold">Sports</code>, <code className="bg-slate-100 px-1.5 py-0.5 rounded text-slate-700 font-bold">Medical</code>, <code className="bg-slate-100 px-1.5 py-0.5 rounded text-slate-700 font-bold">Library</code>, <code className="bg-slate-100 px-1.5 py-0.5 rounded text-slate-700 font-bold">Other</code>. Unmatched categories fallback to Other.
             </li>

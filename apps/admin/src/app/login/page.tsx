@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { login } from "@/lib/auth";
-import { Map, Lock, Mail, AlertCircle, Eye, EyeOff } from "lucide-react";
+import { Map, Lock, Mail, AlertCircle, Eye, EyeOff, ShieldCheck } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -27,43 +27,48 @@ export default function LoginPage() {
         } else {
           setErrorMsg("Invalid administrative email or password.");
         }
-      } catch (err: any) {
+      } catch {
         setErrorMsg("An unexpected error occurred. Please try again.");
       }
     });
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#f8fafc] px-4 py-12 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* Decorative gradients */}
-      <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-teal-500/8 rounded-full blur-[120px] animate-pulse-slow" />
-      <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-indigo-500/8 rounded-full blur-[120px] animate-pulse-slow" />
+    <div className="flex min-h-screen items-center justify-center bg-slate-50/50 px-4 py-12 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Dynamic ambient background blobs */}
+      <div className="absolute top-[-10%] left-[-10%] w-[45%] h-[45%] bg-teal-500/10 rounded-full blur-[140px] animate-pulse-slow pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[45%] h-[45%] bg-indigo-500/10 rounded-full blur-[140px] animate-pulse-slow pointer-events-none" />
 
-      <div className="w-full max-w-md space-y-8 relative z-10">
+      <div className="w-full max-w-md space-y-8 relative z-10 animate-slideUp">
+        {/* Brand Header */}
         <div className="flex flex-col items-center justify-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-teal-650 shadow-lg shadow-teal-650/20">
-            <Map className="h-9 w-9 text-white" />
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-teal-600 text-white shadow-xl shadow-teal-500/20 hover:scale-105 transition-all duration-300">
+            <Map className="h-9 w-9" />
           </div>
-          <h2 className="mt-6 text-center text-3xl font-black tracking-tight text-slate-900">
-            FutoNav Administrator
+          <h2 className="mt-6 text-center text-3xl font-extrabold tracking-tight text-slate-900">
+            FutoNav Admin
           </h2>
-          <p className="mt-2 text-center text-sm text-slate-500 font-semibold">
-            Sign in to manage FUTO campus navigation assets
+          <p className="mt-2 text-center text-sm text-slate-500 font-semibold tracking-wide flex items-center gap-1.5 bg-slate-100 px-3 py-1 rounded-full border border-slate-200/50">
+            <ShieldCheck className="h-4 w-4 text-teal-650" /> Administrative Telemetry Control
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-8 space-y-6 bg-white/80 backdrop-blur-md p-8 rounded-3xl border border-slate-200/80 shadow-lg">
+        {/* Login Card */}
+        <form 
+          onSubmit={handleSubmit} 
+          className="mt-8 space-y-6 glass-panel p-8 sm:p-10 rounded-3xl border border-slate-200/80 shadow-2xl bg-white/70 backdrop-blur-xl"
+        >
           {errorMsg && (
-            <div className="rounded-xl border border-red-200 bg-red-50 p-4 flex gap-2.5 items-start text-sm font-bold text-red-800 animate-fadeIn">
+            <div className="rounded-xl border border-red-200 bg-red-50/80 p-4 flex gap-2.5 items-start text-sm font-bold text-red-800 animate-fadeIn">
               <AlertCircle className="h-5 w-5 shrink-0 text-red-650 mt-0.5" />
               <span>{errorMsg}</span>
             </div>
           )}
 
           <div className="space-y-5">
-            {/* Email */}
+            {/* Email Address */}
             <div className="space-y-2">
-              <label htmlFor="email" className="text-xs font-bold text-slate-500 uppercase tracking-wider block">
+              <label htmlFor="email" className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
                 Email Address
               </label>
               <div className="relative">
@@ -76,7 +81,7 @@ export default function LoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="block w-full rounded-xl border border-slate-200 bg-slate-50/60 pl-12 pr-4 py-3.5 text-sm text-slate-800 placeholder-slate-400 focus:border-teal-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-teal-600 transition-colors font-semibold"
+                  className="block w-full rounded-xl border border-slate-200 bg-slate-50/40 pl-12 pr-4 py-3.5 text-sm text-slate-800 placeholder-slate-400 focus:border-teal-600 focus:bg-white focus:outline-none focus:ring-4 focus:ring-teal-500/10 transition-all font-semibold"
                   placeholder="admin@futonav.com"
                 />
               </div>
@@ -85,7 +90,7 @@ export default function LoginPage() {
             {/* Password */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label htmlFor="password" className="text-xs font-bold text-slate-500 uppercase tracking-wider block">
+                <label htmlFor="password" className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
                   Password
                 </label>
               </div>
@@ -99,7 +104,7 @@ export default function LoginPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full rounded-xl border border-slate-200 bg-slate-50/60 pl-12 pr-12 py-3.5 text-sm text-slate-800 placeholder-slate-400 focus:border-teal-600 focus:bg-white focus:outline-none focus:ring-1 focus:ring-teal-600 transition-colors font-semibold"
+                  className="block w-full rounded-xl border border-slate-200 bg-slate-50/40 pl-12 pr-12 py-3.5 text-sm text-slate-800 placeholder-slate-400 focus:border-teal-600 focus:bg-white focus:outline-none focus:ring-4 focus:ring-teal-500/10 transition-all font-semibold"
                   placeholder="••••••••"
                 />
                 <button
@@ -117,7 +122,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isPending}
-              className="flex w-full justify-center rounded-xl bg-teal-600 px-5 py-4 text-sm font-bold text-white shadow-lg shadow-teal-600/10 hover:bg-teal-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-650 disabled:opacity-50 transition-colors cursor-pointer"
+              className="flex w-full justify-center rounded-xl bg-teal-600 px-5 py-4 text-sm font-bold text-white shadow-lg shadow-teal-650/10 hover:bg-teal-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 disabled:opacity-50 transition-all duration-300 cursor-pointer hover:shadow-teal-500/25 active:scale-[0.98]"
             >
               {isPending ? "Signing in..." : "Sign In"}
             </button>
@@ -127,3 +132,4 @@ export default function LoginPage() {
     </div>
   );
 }
+

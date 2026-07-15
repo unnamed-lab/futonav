@@ -35,7 +35,7 @@ export async function isAuthenticated(): Promise<boolean> {
   if (!token) return false;
 
   try {
-    const payload = jwt.verify(token, jwtSecret) as any;
+    const payload = jwt.verify(token, jwtSecret) as { role?: string };
     return payload.role === "admin";
   } catch {
     return false;

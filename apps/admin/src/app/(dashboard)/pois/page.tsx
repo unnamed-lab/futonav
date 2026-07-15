@@ -12,9 +12,9 @@ export default async function PoisPage() {
   try {
     const repo = getAdminPoiRepository();
     pois = await repo.fetchAll();
-  } catch (error: any) {
+  } catch (error) {
     console.error("Pois fetch error:", error);
-    errorMsg = error.message || "Failed to load database points of interest.";
+    errorMsg = error instanceof Error ? error.message : "Failed to load database points of interest.";
   }
 
   if (errorMsg) {

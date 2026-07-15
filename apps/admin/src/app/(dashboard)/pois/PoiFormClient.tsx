@@ -13,6 +13,8 @@ import {
   ImagePlus,
   Loader2,
   X,
+  FileText,
+  Tag as TagIcon
 } from "lucide-react";
 import Link from "next/link";
 import type { Poi, PoiCategoryType } from "@futonav/shared";
@@ -109,7 +111,6 @@ export default function PoiFormClient({ poi }: PoiFormClientProps) {
 
   const handleImageFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    // Reset the input so selecting the same file again still triggers change.
     e.target.value = "";
     if (!file) return;
 
@@ -129,8 +130,9 @@ export default function PoiFormClient({ poi }: PoiFormClientProps) {
       fd.append("file", file);
       const url = await uploadPoiImageAction(fd);
       setFormData((prev) => ({ ...prev, imageUrl: url }));
-    } catch (err: any) {
-      setErrorMsg(err?.message || "Image upload failed. Please try again.");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Image upload failed. Please try again.";
+      setErrorMsg(message);
     } finally {
       setUploading(false);
     }
@@ -170,24 +172,25 @@ export default function PoiFormClient({ poi }: PoiFormClientProps) {
         });
         router.push("/pois");
         router.refresh();
-      } catch (err: any) {
-        setErrorMsg(err.message || "Failed to save point of interest details.");
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Failed to save point of interest details.";
+        setErrorMsg(message);
       }
     });
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="max-w-3xl mx-auto space-y-6 animate-fadeIn">
       {/* Back link */}
       <div className="flex items-center gap-4">
         <Link
           href="/pois"
-          className="p-2.5 rounded-xl bg-white border border-slate-200/80 text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors shadow-2xs cursor-pointer"
+          className="p-2.5 rounded-xl bg-white border border-slate-200/80 text-slate-500 hover:text-slate-800 hover:bg-slate-55 transition-colors shadow-2xs cursor-pointer border border-transparent hover:border-slate-200"
         >
           <ArrowLeft className="h-4.5 w-4.5" />
         </Link>
         <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight leading-none">
+          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight leading-none">
             {poi ? "Edit Point of Interest" : "Add Point of Interest"}
           </h1>
           <p className="text-slate-500 mt-2 text-sm font-semibold">
@@ -197,88 +200,135 @@ export default function PoiFormClient({ poi }: PoiFormClientProps) {
       </div>
 
       {errorMsg && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-800">
+        <div className="rounded-xl border border-red-250 bg-red-50 p-4 text-sm font-bold text-red-800 animate-fadeIn">
           {errorMsg}
         </div>
       )}
 
       {/* Form Card */}
-      <form onSubmit={handleSubmit} className="glass-panel bg-white border border-slate-200/80 rounded-2xl p-6 sm:p-8 space-y-6">
-        {/* Name */}
-        <div className="space-y-2">
-          <label htmlFor="name" className="text-sm font-bold text-slate-700 block">
-            POI Name *
-          </label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            required
-            value={formData.name}
-            onChange={handleChange}
-            placeholder="e.g. School of Engineering and Engineering Technology"
-            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:bg-white transition-all text-slate-800 font-semibold focus-ring-glow"
-          />
-        </div>
+      <form onSubmit={handleSubmit} className="glass-panel bg-white border border-slate-200/60 rounded-3xl p-6 sm:p-8 space-y-8 shadow-md">
+        
+        {/* Section 1: Basic Information */}
+        <div className="space-y-4">
+          <h3 className="font-bold text-xs uppercase tracking-widest text-slate-400 pb-2 border-b border-slate-100 flex items-center gap-2">
+            <FileText className="h-4 w-4 text-teal-650" />
+            <span>Basic Information</span>
+          </h3>
 
-        <div className="grid gap-6 sm:grid-cols-2">
-          {/* Category */}
+          <div className="grid gap-6 sm:grid-cols-3">
+            {/* Name */}
+            <div className="sm:col-span-2 space-y-2">
+              <label htmlFor="name" className="text-xs font-bold text-slate-500 uppercase tracking-wider block">
+                POI Name *
+              </label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                required
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="e.g. SEET Lecture Hall"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:bg-white transition-all text-slate-800 font-semibold focus-ring-glow"
+              />
+            </div>
+
+            {/* Category */}
+            <div className="space-y-2">
+              <label htmlFor="category" className="text-xs font-bold text-slate-500 uppercase tracking-wider block">
+                Category *
+              </label>
+              <select
+                id="category"
+                name="category"
+                value={formData.category}
+                onChange={handleChange}
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:bg-white transition-all text-slate-800 font-semibold cursor-pointer focus-ring-glow"
+              >
+                {CATEGORIES.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Description */}
           <div className="space-y-2">
-            <label htmlFor="category" className="text-sm font-bold text-slate-700 block">
-              Category *
+            <label htmlFor="description" className="text-xs font-bold text-slate-500 uppercase tracking-wider block">
+              Description (Max 200 characters)
             </label>
-            <select
-              id="category"
-              name="category"
-              value={formData.category}
+            <textarea
+              id="description"
+              name="description"
+              maxLength={200}
+              rows={3}
+              value={formData.description}
               onChange={handleChange}
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:bg-white transition-all text-slate-800 font-semibold cursor-pointer focus-ring-glow"
-            >
-              {CATEGORIES.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Building Image */}
-          <div className="space-y-2">
-            <label className="text-sm font-bold text-slate-700 block">
-              Building Image (Optional)
-            </label>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleImageFile}
-              className="hidden"
+              placeholder="e.g. SEET administrative building housing engineering school dean and labs."
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:bg-white transition-all text-slate-800 font-semibold resize-none focus-ring-glow"
             />
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
-              className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-slate-50 border border-dashed border-slate-300 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 hover:border-slate-400 transition-all cursor-pointer disabled:opacity-60"
-            >
-              {uploading ? (
-                <>
-                  <Loader2 className="h-4.5 w-4.5 animate-spin text-teal-600" />
-                  <span>Uploading…</span>
-                </>
-              ) : (
-                <>
-                  <ImagePlus className="h-4.5 w-4.5 text-teal-600" />
-                  <span>{formData.imageUrl ? "Replace image" : "Upload image"}</span>
-                </>
-              )}
-            </button>
           </div>
         </div>
 
-        {/* Image preview + manual URL fallback */}
-        <div className="space-y-3">
-          {formData.imageUrl ? (
-            <div className="relative w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+        {/* Section 2: Visual Asset */}
+        <div className="space-y-4">
+          <h3 className="font-bold text-xs uppercase tracking-widest text-slate-400 pb-2 border-b border-slate-100 flex items-center gap-2">
+            <ImagePlus className="h-4 w-4 text-teal-650" />
+            <span>Visual Asset</span>
+          </h3>
+
+          <div className="grid gap-6 sm:grid-cols-2 items-start">
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block">
+                Upload Building Image
+              </label>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageFile}
+                className="hidden"
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="w-full inline-flex items-center justify-center gap-2.5 px-4 py-3 bg-slate-50 border border-dashed border-slate-300 rounded-xl text-sm font-semibold text-slate-650 hover:bg-slate-100 hover:border-slate-400 transition-all cursor-pointer disabled:opacity-60"
+              >
+                {uploading ? (
+                  <>
+                    <Loader2 className="h-4.5 w-4.5 animate-spin text-teal-605" />
+                    <span>Uploading…</span>
+                  </>
+                ) : (
+                  <>
+                    <ImagePlus className="h-4.5 w-4.5 text-teal-650 animate-scale-pulse" />
+                    <span>{formData.imageUrl ? "Replace uploaded image" : "Choose image file"}</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="imageUrl" className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
+                Or paste an image URL
+              </label>
+              <input
+                type="url"
+                id="imageUrl"
+                name="imageUrl"
+                value={formData.imageUrl}
+                onChange={handleChange}
+                placeholder="https://example.com/seet.jpg"
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:bg-white transition-all text-slate-800 font-semibold focus-ring-glow"
+              />
+            </div>
+          </div>
+
+          {formData.imageUrl && (
+            <div className="relative w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 animate-fadeIn">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={formData.imageUrl}
@@ -289,157 +339,135 @@ export default function PoiFormClient({ poi }: PoiFormClientProps) {
                 type="button"
                 onClick={handleRemoveImage}
                 title="Remove image"
-                className="absolute top-3 right-3 inline-flex items-center justify-center h-8 w-8 rounded-full bg-white/90 border border-slate-200 text-slate-600 hover:text-red-600 hover:bg-white transition-colors cursor-pointer shadow-2xs"
+                className="absolute top-3 right-3 inline-flex items-center justify-center h-8 w-8 rounded-full bg-white/90 border border-slate-200 text-slate-600 hover:text-red-650 hover:bg-white transition-colors cursor-pointer shadow-2xs"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
-          ) : null}
+          )}
+        </div>
+
+        {/* Section 3: Telemetry */}
+        <div className="space-y-4">
+          <h3 className="font-bold text-xs uppercase tracking-widest text-slate-400 pb-2 border-b border-slate-100 flex items-center gap-2">
+            <MapPin className="h-4 w-4 text-teal-650" />
+            <span>Geographical Telemetry</span>
+          </h3>
+
+          <div className="bg-slate-50/50 p-5 rounded-2xl border border-slate-200/60 space-y-4">
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <span className="text-xs text-slate-500 font-semibold leading-relaxed max-w-[280px]">
+                FUTO coordinates typical range: Latitude: 5.39xx, Longitude: 7.00xx.
+              </span>
+              <button
+                type="button"
+                onClick={handleGetCurrentLocation}
+                disabled={locating}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-teal-700 bg-teal-50 border border-teal-200 hover:bg-teal-100/70 px-4 py-2.5 rounded-xl transition-all cursor-pointer disabled:opacity-50 active:scale-95 shadow-2xs"
+              >
+                <Locate className={`h-4 w-4 ${locating ? "animate-spin text-teal-500" : "text-teal-650"}`} />
+                <span>{locating ? "Locating..." : "Use Current Location"}</span>
+              </button>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <label htmlFor="latitude" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                  Latitude *
+                </label>
+                <input
+                  type="text"
+                  id="latitude"
+                  name="latitude"
+                  required
+                  value={formData.latitude}
+                  onChange={handleChange}
+                  placeholder="e.g. 5.391500"
+                  className={`w-full px-4 py-3 border rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:bg-white transition-all font-mono font-bold focus-ring-glow ${
+                    isLatOutOfFuto 
+                      ? "border-amber-300 bg-amber-50/40 text-amber-900" 
+                      : "border-slate-200 bg-white text-slate-800"
+                  }`}
+                />
+                {isLatOutOfFuto && (
+                  <span className="text-[10px] text-amber-605 font-bold flex items-center gap-1 mt-1.5 leading-normal">
+                    <AlertTriangle className="h-3 w-3 shrink-0" />
+                    Outside FUTO boundary layout (5.37 to 5.41).
+                  </span>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="longitude" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                  Longitude *
+                </label>
+                <input
+                  type="text"
+                  id="longitude"
+                  name="longitude"
+                  required
+                  value={formData.longitude}
+                  onChange={handleChange}
+                  placeholder="e.g. 7.002500"
+                  className={`w-full px-4 py-3 border rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:bg-white transition-all font-mono font-bold focus-ring-glow ${
+                    isLngOutOfFuto 
+                      ? "border-amber-300 bg-amber-50/40 text-amber-900" 
+                      : "border-slate-200 bg-white text-slate-800"
+                  }`}
+                />
+                {isLngOutOfFuto && (
+                  <span className="text-[10px] text-amber-650 font-bold flex items-center gap-1 mt-1.5 leading-normal">
+                    <AlertTriangle className="h-3 w-3 shrink-0" />
+                    Outside FUTO boundary layout (6.98 to 7.02).
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Section 4: Metadata & Indexing */}
+        <div className="space-y-4">
+          <h3 className="font-bold text-xs uppercase tracking-widest text-slate-400 pb-2 border-b border-slate-100 flex items-center gap-2">
+            <TagIcon className="h-4 w-4 text-teal-650" />
+            <span>Metadata & Fuzzy Indexing</span>
+          </h3>
 
           <div className="space-y-2">
-            <label htmlFor="imageUrl" className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
-              Or paste an image URL
-            </label>
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <label htmlFor="tags" className="text-xs font-bold text-slate-500 uppercase tracking-wider block">
+                Fuzzy Search Tags
+              </label>
+              <span className="inline-flex items-center gap-1 text-[9px] text-teal-700 bg-teal-55 px-2 py-0.5 rounded-md font-bold tracking-wide uppercase">
+                <Sparkles className="h-3 w-3 animate-pulse" />
+                Index Abbreviation keywords
+              </span>
+            </div>
             <input
-              type="url"
-              id="imageUrl"
-              name="imageUrl"
-              value={formData.imageUrl}
+              type="text"
+              id="tags"
+              name="tags"
+              value={formData.tags}
               onChange={handleChange}
-              placeholder="https://example.com/seet.jpg"
+              placeholder="e.g. SEET, engineering, dean, lecture hall"
               className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:bg-white transition-all text-slate-800 font-semibold focus-ring-glow"
             />
+            <p className="text-[10px] text-slate-400 font-medium leading-relaxed">Separate keywords using commas (helps mobile client search abbreviations).</p>
           </div>
-        </div>
-
-        {/* Coordinates */}
-        <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200/60 space-y-4">
-          <div className="flex items-center justify-between flex-wrap gap-3">
-            <div className="flex items-center gap-2 text-teal-700 font-bold text-sm">
-              <MapPin className="h-4.5 w-4.5" />
-              <span>Campus GPS Coordinates</span>
-            </div>
-            <button
-              type="button"
-              onClick={handleGetCurrentLocation}
-              disabled={locating}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-teal-700 bg-teal-50 border border-teal-200 hover:bg-teal-100/70 px-3.5 py-2 rounded-xl transition-all cursor-pointer disabled:opacity-50 active:scale-95 shadow-2xs"
-            >
-              <Locate className={`h-4 w-4 ${locating ? "animate-spin text-teal-500" : "text-teal-650"}`} />
-              <span>{locating ? "Locating..." : "Use Current Location"}</span>
-            </button>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <label htmlFor="latitude" className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
-                Latitude *
-              </label>
-              <input
-                type="text"
-                id="latitude"
-                name="latitude"
-                required
-                value={formData.latitude}
-                onChange={handleChange}
-                placeholder="e.g. 5.391500"
-                className={`w-full px-4 py-3 border rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:bg-white transition-all font-mono font-semibold focus-ring-glow ${
-                  isLatOutOfFuto 
-                    ? "border-amber-300 bg-amber-50/30 text-amber-900" 
-                    : "border-slate-200 bg-white text-slate-800"
-                }`}
-              />
-              {isLatOutOfFuto && (
-                <span className="text-[10px] text-amber-600 font-bold flex items-center gap-1 mt-1 leading-normal">
-                  <AlertTriangle className="h-3 w-3 shrink-0" />
-                  Outside typical FUTO boundaries (5.37 to 5.41).
-                </span>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <label htmlFor="longitude" className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
-                Longitude *
-              </label>
-              <input
-                type="text"
-                id="longitude"
-                name="longitude"
-                required
-                value={formData.longitude}
-                onChange={handleChange}
-                placeholder="e.g. 7.002500"
-                className={`w-full px-4 py-3 border rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:bg-white transition-all font-mono font-semibold focus-ring-glow ${
-                  isLngOutOfFuto 
-                    ? "border-amber-300 bg-amber-50/30 text-amber-900" 
-                    : "border-slate-200 bg-white text-slate-800"
-                }`}
-              />
-              {isLngOutOfFuto && (
-                <span className="text-[10px] text-amber-600 font-bold flex items-center gap-1 mt-1 leading-normal">
-                  <AlertTriangle className="h-3 w-3 shrink-0" />
-                  Outside typical FUTO boundaries (6.98 to 7.02).
-                </span>
-              )}
-            </div>
-          </div>
-          <p className="text-[10px] text-slate-400 font-medium leading-relaxed">
-            FUTO coordinates fall around Latitude: 5.39xx and Longitude: 7.00xx. Please ensure accuracy for correct offline routing.
-          </p>
-        </div>
-
-        {/* Description */}
-        <div className="space-y-2">
-          <label htmlFor="description" className="text-sm font-bold text-slate-700 block">
-            Description (Max 200 characters)
-          </label>
-          <textarea
-            id="description"
-            name="description"
-            maxLength={200}
-            rows={3}
-            value={formData.description}
-            onChange={handleChange}
-            placeholder="e.g. SEET administrative building housing engineering school dean and labs."
-            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:bg-white transition-all text-slate-800 font-semibold resize-none focus-ring-glow"
-          />
-        </div>
-
-        {/* Tags */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <label htmlFor="tags" className="text-sm font-bold text-slate-700 block">
-              Fuzzy Search Tags
-            </label>
-            <span className="inline-flex items-center gap-1 text-[10px] text-teal-700 font-bold bg-teal-50 px-2 py-0.5 rounded">
-              <Sparkles className="h-3 w-3" />
-              Helps find abbreviations
-            </span>
-          </div>
-          <input
-            type="text"
-            id="tags"
-            name="tags"
-            value={formData.tags}
-            onChange={handleChange}
-            placeholder="e.g. SEET, engineering, dean, lecture hall"
-            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:bg-white transition-all text-slate-800 font-semibold focus-ring-glow"
-          />
-          <p className="text-[10px] text-slate-400 font-medium leading-relaxed">Separate search keywords and abbreviation codes using commas.</p>
         </div>
 
         {/* Buttons */}
         <div className="flex items-center justify-end gap-3 pt-5 border-t border-slate-100">
           <Link
             href="/pois"
-            className="px-5 py-3 text-sm font-bold border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
+            className="px-5 py-3 text-sm font-bold border border-slate-250 rounded-xl text-slate-550 hover:bg-slate-50 hover:text-slate-800 transition-colors cursor-pointer"
           >
             Cancel
           </Link>
           <button
             type="submit"
             disabled={isPending}
-            className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-5 py-3 text-sm font-bold text-white hover:bg-teal-700 transition-colors disabled:opacity-50 cursor-pointer shadow-md shadow-teal-600/10"
+            className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-5 py-3 text-sm font-bold text-white hover:bg-teal-700 transition-all disabled:opacity-50 cursor-pointer shadow-md shadow-teal-650/10 hover:shadow-teal-500/20 active:scale-[0.98]"
           >
             <Save className="h-4.5 w-4.5" />
             <span>{isPending ? "Saving..." : "Save POI"}</span>
