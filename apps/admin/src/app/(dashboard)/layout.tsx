@@ -22,9 +22,9 @@ export default async function DashboardLayout({
 
       <Navbar />
 
-      {/* Main Content Area */}
+      {/* Main Content Area (offset below the fixed mobile header via pt-20) */}
       <div className="flex-1 flex flex-col min-w-0 z-10 md:pl-64">
-        <main className="flex-1 px-4 py-8 sm:px-6 lg:px-8 md:py-10 max-w-7xl w-full mx-auto">
+        <main className="flex-1 px-4 pt-20 pb-8 sm:px-6 lg:px-8 md:pt-10 md:pb-10 max-w-7xl w-full mx-auto">
           {children}
         </main>
       </div>

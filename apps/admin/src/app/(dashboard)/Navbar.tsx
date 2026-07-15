@@ -162,9 +162,6 @@ export default function Navbar() {
           </button>
         </div>
       </aside>
-
-      {/* Spacing for mobile headers */}
-      <div className="h-16 md:hidden w-full shrink-0" />
     </>
   );
 }
