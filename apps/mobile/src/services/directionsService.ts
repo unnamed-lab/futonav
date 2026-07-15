@@ -1,3 +1,5 @@
+import { calculateEtaMinutes, haversineMeters } from "@futonav/core";
+import { MAX_DETOUR_FACTOR, type TransportMode } from "@futonav/shared";
 import { getGoogleMapsKey } from "./mapKeyProvider";
 
 export interface LatLng {
@@ -55,7 +57,7 @@ function decodePolyline(encoded: string): LatLng[] {
 export async function fetchGoogleRoute(
   start: LatLng,
   end: LatLng,
-  mode: "walking" | "bike" | "car",
+  mode: TransportMode,
 ): Promise<GoogleRouteResult | null> {
   const apiKey = getGoogleMapsKey();
   if (!apiKey) {
@@ -77,24 +79,52 @@ export async function fetchGoogleRoute(
     const data = await res.json();
 
     if (data.status !== "OK" || !data.routes || data.routes.length === 0) {
-      console.warn("Google Directions API status is not OK:", data.status);
+      // error_message surfaces the real cause, e.g. REQUEST_DENIED when the key
+      // isn't authorized for the Directions API (distinct from the Maps SDK) or
+      // ZERO_RESULTS when the mode has no path on campus.
+      console.warn(
+        "Google Directions API status is not OK:",
+        data.status,
+        data.error_message ?? "",
+      );
       return null;
     }
 
     const route = data.routes[0];
     const leg = route.legs[0];
-    const encodedPolyline = route.overview_polyline.points;
-    const polyline = decodePolyline(encodedPolyline);
-    const distanceMeters = leg.distance.value;
-    
-    let etaMinutes = Math.max(1, Math.round(leg.duration.value / 60));
 
-    // Add realistic campus buffer overheads
-    if (mode === "bike") {
-      etaMinutes += 1; // account for unlocking/locking/mounting
-    } else if (mode === "car") {
-      etaMinutes += 2; // account for startup/parking/walking from lot
+    // Prefer the high-fidelity per-step geometry, which hugs the actual road,
+    // over route.overview_polyline (a decimated path that visibly cuts corners
+    // and slices across buildings). Fall back to the overview if steps are absent.
+    const steps = leg.steps as { polyline?: { points: string } }[] | undefined;
+    let polyline: LatLng[];
+    if (steps && steps.length > 0) {
+      polyline = [];
+      for (const step of steps) {
+        if (!step.polyline?.points) continue;
+        const segment = decodePolyline(step.polyline.points);
+        // Skip the first point of each subsequent step to avoid duplicates.
+        polyline.push(...(polyline.length > 0 ? segment.slice(1) : segment));
+      }
+    } else {
+      polyline = decodePolyline(route.overview_polyline.points);
     }
+
+    const distanceMeters = leg.distance.value;
+
+    // Reject obvious off-campus detours: FUTO's internal roads are frequently
+    // missing from Google's driving/bicycling graph, so the router loops out to
+    // the public highway and back. When that happens, defer to the on-campus
+    // Dijkstra fallback instead of showing an inflated distance/ETA.
+    const crowFliesMeters = haversineMeters(start, end);
+    if (crowFliesMeters > 0 && distanceMeters > crowFliesMeters * MAX_DETOUR_FACTOR) {
+      console.warn("Google route rejected as an off-campus detour.");
+      return null;
+    }
+
+    // Single shared ETA model: trust Google's traffic-aware duration but clamp
+    // it to a physically plausible band (see calculateEtaMinutes).
+    const etaMinutes = calculateEtaMinutes(distanceMeters, mode, leg.duration.value);
 
     return {
       polyline,

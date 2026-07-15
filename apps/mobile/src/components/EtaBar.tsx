@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet } from "react-native";
 import { formatDistance, calculateEtaMinutes, haversineMeters } from "@futonav/core";
+import { ROAD_DISTANCE_FACTOR } from "@futonav/shared";
 import { useLocationStore } from "../stores/useLocationStore";
 import { useNavStore } from "../stores/useNavStore";
 import { Ionicons } from "@expo/vector-icons";
@@ -11,13 +12,17 @@ export function EtaBar() {
 
   if (!currentPosition || !selectedPoi) return null;
 
+  // Before a real route resolves, approximate travel distance from the
+  // crow-flies distance scaled by a road factor so the displayed ETA is close
+  // to the eventual routed value and doesn't visibly jump when it arrives.
   const straightLineDist = haversineMeters(
     { latitude: currentPosition.latitude, longitude: currentPosition.longitude },
     { latitude: selectedPoi.latitude, longitude: selectedPoi.longitude },
   );
+  const estimatedRoadDist = straightLineDist * ROAD_DISTANCE_FACTOR;
 
-  const displayDist = route ? route.distanceMeters : straightLineDist;
-  const displayEta = route ? route.etaMinutes : calculateEtaMinutes(straightLineDist, transportMode);
+  const displayDist = route ? route.distanceMeters : estimatedRoadDist;
+  const displayEta = route ? route.etaMinutes : calculateEtaMinutes(estimatedRoadDist, transportMode);
 
   return (
     <View style={styles.container}>

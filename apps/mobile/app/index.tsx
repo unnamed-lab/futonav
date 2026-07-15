@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { View, TouchableOpacity, StyleSheet, PanResponder, Animated } from "react-native";
 import { useRouter } from "expo-router";
-import { searchPois, findRoute, calculateEtaMinutes } from "@futonav/core";
+import { searchPois } from "@futonav/core";
 import { MapCanvas } from "../src/components/MapCanvas";
 import { SearchBar } from "../src/components/SearchBar";
 import { ResultsSheet } from "../src/components/ResultsSheet";
@@ -79,14 +79,12 @@ export default function MapScreen() {
             etaMinutes: googleResult.etaMinutes,
           });
         } else {
-          // Fallback to local Dijkstra routing
-          const localResult = findRoute(start, end, transportMode);
-          const etaMinutes = calculateEtaMinutes(localResult.distanceMeters, transportMode);
-          setRoute({
-            polyline: localResult.polyline,
-            distanceMeters: localResult.distanceMeters,
-            etaMinutes,
-          });
+          // No real road-following route available (e.g. Directions API not
+          // enabled/authorized, or no path for this mode). Don't draw a
+          // misleading straight-line polyline through buildings — clear the
+          // route so the map shows no line; the EtaBar still shows a distance
+          // and ETA estimate on its own.
+          setRoute(null);
         }
       } else {
         setRoute(null);
