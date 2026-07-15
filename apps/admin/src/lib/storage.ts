@@ -6,7 +6,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "http://localhost:54
 const jwtSecret = process.env.JWT_SECRET || "super-secret-jwt-token-with-at-least-32-characters-long";
 
 // Public bucket that holds admin-uploaded POI/building images.
-const BUCKET = "poi-images";
+const BUCKET = process.env.SUPABASE_STORAGE_BUCKET || "futonavapp";
 
 const MIME_EXTENSIONS: Record<string, string> = {
   "image/jpeg": "jpg",
@@ -18,11 +18,16 @@ const MIME_EXTENSIONS: Record<string, string> = {
 };
 
 /**
- * Mints a short-lived service_role JWT so Storage requests bypass RLS. This
- * mirrors how lib/auth.ts / lib/db.ts sign their own tokens against the shared
- * Supabase JWT secret.
+ * Token used to authorize Storage requests (bucket create + object write/delete).
+ *  - Prod / Supabase Cloud: the real service_role secret key (SUPABASE_SERVICE_KEY),
+ *    which the Storage API + gateway accept and which bypasses Storage RLS.
+ *  - Dev / self-hosted: a short-lived self-signed service_role JWT works against a
+ *    local instance whose JWT secret we control.
  */
 function serviceToken(): string {
+  const serviceKey = process.env.SUPABASE_SERVICE_KEY;
+  if (serviceKey) return serviceKey;
+
   return jwt.sign(
     {
       role: "service_role",

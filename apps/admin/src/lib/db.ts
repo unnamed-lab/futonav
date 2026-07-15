@@ -17,10 +17,20 @@ function generateAdminJwt(): string {
   );
 }
 
+/**
+ * Token used for privileged (RLS-bypassing) admin writes.
+ *  - Prod / Supabase Cloud: the real service_role secret key (SUPABASE_SERVICE_KEY).
+ *    Cloud rejects self-signed tokens at the API gateway, so a real key is required.
+ *  - Dev / self-hosted: a self-signed postgres JWT works against a local instance
+ *    whose JWT secret we control.
+ */
+export function getAdminToken(): string {
+  return process.env.SUPABASE_SERVICE_KEY || generateAdminJwt();
+}
+
 export function getAdminPoiRepository() {
   // Always reset client to ensure we use the admin token
   resetClient();
-  const token = generateAdminJwt();
-  const client = getSupabaseClient(supabaseUrl, token);
+  const client = getSupabaseClient(supabaseUrl, getAdminToken());
   return createPoiRepository(client);
 }

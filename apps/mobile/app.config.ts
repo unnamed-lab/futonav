@@ -56,7 +56,8 @@ export default (): ExpoConfig => ({
   owner: "unnamedcodes",
   extra: {
     supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL,
-    supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
+    supabaseAnonKey:
+      process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || process.env.EXPO_PUBLIC_SUPABASE_KEY,
     googleMapsKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_KEY || process.env.GOOGLE_MAPS_ANDROID_KEY,
     eas: {
       projectId: "935a43a7-aa4c-4af9-9d0a-c1bee9c8b4de",
