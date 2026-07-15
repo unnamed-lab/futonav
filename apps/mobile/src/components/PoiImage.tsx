@@ -7,7 +7,10 @@ import { COLORS, CATEGORY_THEMES } from "../theme/theme";
 interface PoiImageProps {
   poi: Poi;
   height?: number;
+  width?: number;
   borderRadius?: number;
+  /** Shrinks the placeholder icon; useful for small thumbnails. */
+  iconScale?: number;
 }
 
 /**
@@ -17,7 +20,13 @@ interface PoiImageProps {
  * building with no photo yet). Uses React Native's Image so nothing new needs
  * installing; native platforms cache the bytes for repeat views.
  */
-export function PoiImage({ poi, height = 170, borderRadius = 16 }: PoiImageProps) {
+export function PoiImage({
+  poi,
+  height = 170,
+  width,
+  borderRadius = 16,
+  iconScale = 0.26,
+}: PoiImageProps) {
   const [failed, setFailed] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -29,6 +38,7 @@ export function PoiImage({ poi, height = 170, borderRadius = 16 }: PoiImageProps
       style={[
         styles.container,
         { height, borderRadius, backgroundColor: theme.color + "12" },
+        width !== undefined ? { width } : null,
       ]}
     >
       {hasImage ? (
@@ -51,7 +61,7 @@ export function PoiImage({ poi, height = 170, borderRadius = 16 }: PoiImageProps
         </>
       ) : (
         <View style={styles.placeholder}>
-          <Ionicons name={theme.icon as never} size={Math.round(height * 0.26)} color={theme.color} />
+          <Ionicons name={theme.icon as never} size={Math.round(height * iconScale)} color={theme.color} />
         </View>
       )}
     </View>

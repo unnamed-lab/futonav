@@ -2,6 +2,7 @@ import { View, Text, FlatList, TouchableOpacity, StyleSheet } from "react-native
 import type { Poi, PoiCategoryType } from "@futonav/shared";
 import { formatDistance, haversineMeters } from "@futonav/core";
 import { useLocationStore } from "../stores/useLocationStore";
+import { PoiImage } from "./PoiImage";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS, FONTS, SHADOWS, CATEGORY_THEMES } from "../theme/theme";
 
@@ -32,8 +33,8 @@ export function ResultsSheet({ results, onSelectPoi }: ResultsSheetProps) {
 
           return (
             <TouchableOpacity style={styles.row} onPress={() => onSelectPoi(item)} activeOpacity={0.7}>
-              <View style={[styles.iconContainer, { backgroundColor: theme.color + "12" }]}>
-                <Ionicons name={theme.icon as any} size={16} color={theme.color} />
+              <View style={styles.thumb}>
+                <PoiImage poi={item} width={44} height={44} borderRadius={12} iconScale={0.42} />
               </View>
               <View style={styles.info}>
                 <Text style={styles.name} numberOfLines={1}>{item.name}</Text>
@@ -89,12 +90,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
-  iconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    justifyContent: "center",
-    alignItems: "center",
+  thumb: {
     marginRight: 12,
   },
   info: { flex: 1 },
@@ -129,7 +125,7 @@ const styles = StyleSheet.create({
   separator: {
     height: 1,
     backgroundColor: COLORS.borderLight,
-    marginLeft: 64,
+    marginLeft: 72,
     marginRight: 16,
   },
 });
