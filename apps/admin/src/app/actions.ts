@@ -2,8 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { getAdminPoiRepository } from "@/lib/db";
+import { uploadPoiImage } from "@/lib/storage";
 import { PoiCategory, type PoiCategoryType } from "@futonav/shared";
 import { z } from "zod";
+
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5MB
 
 const FormSchema = z.object({
   id: z.string().uuid().optional(),
@@ -17,8 +20,30 @@ const FormSchema = z.object({
      .map(t => t.trim())
      .filter(Boolean)
   ).default(""),
-  imageUrl: z.string().transform(v => v || null).nullable(),
+  // Accept a valid URL or empty/null; the mobile app requires a valid URL, so
+  // reject anything else here rather than syncing a value it will discard.
+  imageUrl: z
+    .string()
+    .url("Image URL must be a valid URL")
+    .nullable()
+    .transform((v) => v || null),
 });
+
+export async function uploadPoiImageAction(formData: FormData): Promise<string> {
+  const file = formData.get("file");
+
+  if (!(file instanceof File) || file.size === 0) {
+    throw new Error("No image file was provided.");
+  }
+  if (!file.type.startsWith("image/")) {
+    throw new Error("Uploaded file must be an image.");
+  }
+  if (file.size > MAX_IMAGE_BYTES) {
+    throw new Error("Image is too large. Please upload a file under 5MB.");
+  }
+
+  return uploadPoiImage(file);
+}
 
 export async function deletePoiAction(id: string) {
   const repo = getAdminPoiRepository();

@@ -1,9 +1,19 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { savePoiAction } from "../../actions";
-import { ArrowLeft, Save, MapPin, Sparkles, Locate, AlertTriangle } from "lucide-react";
+import { savePoiAction, uploadPoiImageAction } from "../../actions";
+import {
+  ArrowLeft,
+  Save,
+  MapPin,
+  Sparkles,
+  Locate,
+  AlertTriangle,
+  ImagePlus,
+  Loader2,
+  X,
+} from "lucide-react";
 import Link from "next/link";
 import type { Poi, PoiCategoryType } from "@futonav/shared";
 
@@ -28,6 +38,8 @@ export default function PoiFormClient({ poi }: PoiFormClientProps) {
   const [isPending, startTransition] = useTransition();
   const [errorMsg, setErrorMsg] = useState("");
   const [locating, setLocating] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
     id: poi?.id || "",
@@ -93,6 +105,39 @@ export default function PoiFormClient({ poi }: PoiFormClientProps) {
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleImageFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    // Reset the input so selecting the same file again still triggers change.
+    e.target.value = "";
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setErrorMsg("Please choose an image file.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setErrorMsg("Image is too large. Please choose a file under 5MB.");
+      return;
+    }
+
+    setUploading(true);
+    setErrorMsg("");
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const url = await uploadPoiImageAction(fd);
+      setFormData((prev) => ({ ...prev, imageUrl: url }));
+    } catch (err: any) {
+      setErrorMsg(err?.message || "Image upload failed. Please try again.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setFormData((prev) => ({ ...prev, imageUrl: "" }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -197,10 +242,63 @@ export default function PoiFormClient({ poi }: PoiFormClientProps) {
             </select>
           </div>
 
-          {/* Image URL */}
+          {/* Building Image */}
           <div className="space-y-2">
-            <label htmlFor="imageUrl" className="text-sm font-bold text-slate-700 block">
-              Image URL (Optional)
+            <label className="text-sm font-bold text-slate-700 block">
+              Building Image (Optional)
+            </label>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageFile}
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-slate-50 border border-dashed border-slate-300 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 hover:border-slate-400 transition-all cursor-pointer disabled:opacity-60"
+            >
+              {uploading ? (
+                <>
+                  <Loader2 className="h-4.5 w-4.5 animate-spin text-teal-600" />
+                  <span>Uploading…</span>
+                </>
+              ) : (
+                <>
+                  <ImagePlus className="h-4.5 w-4.5 text-teal-600" />
+                  <span>{formData.imageUrl ? "Replace image" : "Upload image"}</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Image preview + manual URL fallback */}
+        <div className="space-y-3">
+          {formData.imageUrl ? (
+            <div className="relative w-full overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={formData.imageUrl}
+                alt="POI preview"
+                className="w-full h-48 object-cover"
+              />
+              <button
+                type="button"
+                onClick={handleRemoveImage}
+                title="Remove image"
+                className="absolute top-3 right-3 inline-flex items-center justify-center h-8 w-8 rounded-full bg-white/90 border border-slate-200 text-slate-600 hover:text-red-600 hover:bg-white transition-colors cursor-pointer shadow-2xs"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          ) : null}
+
+          <div className="space-y-2">
+            <label htmlFor="imageUrl" className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
+              Or paste an image URL
             </label>
             <input
               type="url"
@@ -208,7 +306,7 @@ export default function PoiFormClient({ poi }: PoiFormClientProps) {
               name="imageUrl"
               value={formData.imageUrl}
               onChange={handleChange}
-              placeholder="e.g. https://example.com/seet.jpg"
+              placeholder="https://example.com/seet.jpg"
               className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:bg-white transition-all text-slate-800 font-semibold focus-ring-glow"
             />
           </div>
