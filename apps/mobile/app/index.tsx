@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { View, TouchableOpacity, StyleSheet, PanResponder, Animated } from "react-native";
 import { useRouter } from "expo-router";
-import { searchPois } from "@futonav/core";
+import { searchPois, findRoute, calculateEtaMinutes } from "@futonav/core";
 import { MapCanvas } from "../src/components/MapCanvas";
 import { SearchBar } from "../src/components/SearchBar";
 import { ResultsSheet } from "../src/components/ResultsSheet";
@@ -79,12 +79,21 @@ export default function MapScreen() {
             etaMinutes: googleResult.etaMinutes,
           });
         } else {
-          // No real road-following route available (e.g. Directions API not
-          // enabled/authorized, or no path for this mode). Don't draw a
-          // misleading straight-line polyline through buildings — clear the
-          // route so the map shows no line; the EtaBar still shows a distance
-          // and ETA estimate on its own.
-          setRoute(null);
+          // Google unavailable (e.g. Directions API not enabled/authorized, or
+          // offline). Fall back to the offline OSM campus road graph, which
+          // follows real roads. Only draw it when it's a genuine on-network
+          // route — never a straight line through buildings.
+          const local = findRoute(start, end, transportMode);
+          if (local.onNetwork) {
+            setRoute({
+              polyline: local.polyline,
+              distanceMeters: local.distanceMeters,
+              etaMinutes: calculateEtaMinutes(local.distanceMeters, transportMode),
+            });
+          } else {
+            // No trustworthy path — show no polyline; EtaBar still estimates.
+            setRoute(null);
+          }
         }
       } else {
         setRoute(null);

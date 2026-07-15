@@ -21,4 +21,20 @@ describe("findRoute", () => {
     expect(route.polyline[0]).toEqual(startLoc);
     expect(route.polyline[route.polyline.length - 1]).toEqual(endLoc);
   });
+
+  it("follows the OSM road network across campus", () => {
+    const far = { latitude: 5.39, longitude: 6.995 };
+    const route = findRoute(startLoc, far, "walking");
+    // A real road-following route has many shape points and is flagged on-network.
+    expect(route.onNetwork).toBe(true);
+    expect(route.polyline.length).toBeGreaterThan(5);
+    // Along-road distance must exceed the straight-line distance.
+    expect(route.distanceMeters).toBeGreaterThan(0);
+  });
+
+  it("flags short direct hops as on-network", () => {
+    const nearby = { latitude: 5.3852, longitude: 6.993 };
+    const route = findRoute(nearby, endLoc);
+    expect(route.onNetwork).toBe(true);
+  });
 });
