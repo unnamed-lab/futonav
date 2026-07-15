@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getAdminPoiRepository } from "@/lib/db";
-import { uploadPoiImage } from "@/lib/storage";
+import { uploadPoiImage, deletePoiImage } from "@/lib/storage";
 import { PoiCategory, type PoiCategoryType } from "@futonav/shared";
 import { z } from "zod";
 
@@ -47,7 +47,12 @@ export async function uploadPoiImageAction(formData: FormData): Promise<string> 
 
 export async function deletePoiAction(id: string) {
   const repo = getAdminPoiRepository();
+  // Look up the image before deleting so we can clean up its storage object.
+  const existing = await repo.fetchById(id).catch(() => null);
   await repo.remove(id);
+  if (existing?.imageUrl) {
+    await deletePoiImage(existing.imageUrl).catch(() => {});
+  }
   revalidatePath("/pois");
   revalidatePath("/");
 }
@@ -65,6 +70,9 @@ export async function savePoiAction(formData: {
   const parsed = FormSchema.parse(formData);
   const repo = getAdminPoiRepository();
 
+  // When editing, capture the previous image so we can clean it up if replaced.
+  const previous = parsed.id ? await repo.fetchById(parsed.id).catch(() => null) : null;
+
   await repo.upsert({
     id: parsed.id,
     name: parsed.name,
@@ -75,6 +83,11 @@ export async function savePoiAction(formData: {
     tags: parsed.tags as string[],
     imageUrl: parsed.imageUrl,
   });
+
+  // Remove the old storage object if the image changed or was cleared.
+  if (previous?.imageUrl && previous.imageUrl !== parsed.imageUrl) {
+    await deletePoiImage(previous.imageUrl).catch(() => {});
+  }
 
   revalidatePath("/pois");
   revalidatePath("/");

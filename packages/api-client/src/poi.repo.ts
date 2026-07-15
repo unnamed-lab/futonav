@@ -39,6 +39,12 @@ export function createPoiRepository(client: PostgrestClient) {
     return (data || []).map(toPoi);
   }
 
+  async function fetchById(id: string): Promise<Poi | null> {
+    const { data, error } = await client.from(TABLE).select("*").eq("id", id).maybeSingle();
+    if (error) throw error;
+    return data ? toPoi(data) : null;
+  }
+
   async function fetchSince(updatedAt: string | null): Promise<Poi[]> {
     if (!updatedAt) return fetchAll();
     const { data, error } = await client
@@ -65,5 +71,5 @@ export function createPoiRepository(client: PostgrestClient) {
     if (error) throw error;
   }
 
-  return { fetchAll, fetchSince, upsert, remove };
+  return { fetchAll, fetchById, fetchSince, upsert, remove };
 }

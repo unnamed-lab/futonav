@@ -85,3 +85,27 @@ export async function uploadPoiImage(file: File): Promise<string> {
 
   return `${supabaseUrl}/storage/v1/object/public/${BUCKET}/${path}`;
 }
+
+/**
+ * Deletes an image from Storage given its public URL. No-ops for URLs that
+ * aren't in our bucket (e.g. an externally pasted URL). Best-effort: callers
+ * should not let cleanup failures block the primary DB operation.
+ */
+export async function deletePoiImage(imageUrl: string): Promise<void> {
+  const marker = `/storage/v1/object/public/${BUCKET}/`;
+  const idx = imageUrl.indexOf(marker);
+  if (idx === -1) return;
+
+  const path = imageUrl.slice(idx + marker.length);
+  if (!path) return;
+
+  const token = serviceToken();
+  const res = await fetch(`${supabaseUrl}/storage/v1/object/${BUCKET}/${path}`, {
+    method: "DELETE",
+    headers: authHeaders(token),
+  });
+
+  if (!res.ok && res.status !== 404) {
+    console.warn(`Could not delete storage image (${res.status}): ${await res.text()}`);
+  }
+}
