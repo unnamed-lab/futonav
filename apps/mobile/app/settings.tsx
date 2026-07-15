@@ -63,7 +63,8 @@ export default function SettingsScreen() {
             <Ionicons name="arrow-back" size={20} color={COLORS.primary} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Settings</Text>
-          <View style={{ width: 36 }} /> {/* spacer */}
+          {/* spacer to balance the back button */}
+          <View style={{ width: 36 }} />
         </View>
 
         {/* Map Section */}

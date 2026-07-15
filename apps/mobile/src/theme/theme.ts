@@ -67,72 +67,23 @@ export const FONTS = {
   extrabold: "PlusJakartaSans_800ExtraBold",
 };
 
-// Premium minimal map style to clean up standard Google Maps
+// Minimal map style: only declutters labels/icons and keeps Google's default
+// geometry colors, so the standard map always renders a legible, populated map.
+// (An earlier version recolored all geometry to near-white, which made the
+// campus look blank on FUTO's sparse vector data.)
 export const MAP_STYLE_JSON = [
-  {
-    elementType: "geometry",
-    stylers: [{ color: "#f8fafc" }],
-  },
   {
     elementType: "labels.icon",
     stylers: [{ visibility: "off" }],
   },
   {
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#475569" }],
-  },
-  {
-    elementType: "labels.text.stroke",
-    stylers: [{ color: "#ffffff" }],
-  },
-  {
-    featureType: "administrative",
-    elementType: "geometry",
+    featureType: "poi.business",
+    elementType: "labels",
     stylers: [{ visibility: "off" }],
   },
   {
-    featureType: "landscape",
-    elementType: "geometry.fill",
-    stylers: [{ color: "#f1f5f9" }],
-  },
-  {
-    featureType: "poi",
-    elementType: "geometry",
-    stylers: [{ color: "#e2e8f0" }],
-  },
-  {
-    featureType: "poi",
-    elementType: "labels.text",
+    featureType: "transit",
+    elementType: "labels.icon",
     stylers: [{ visibility: "off" }],
-  },
-  {
-    featureType: "road",
-    elementType: "geometry.fill",
-    stylers: [{ color: "#ffffff" }],
-  },
-  {
-    featureType: "road",
-    elementType: "geometry.stroke",
-    stylers: [{ color: "#f1f5f9" }],
-  },
-  {
-    featureType: "road.highway",
-    elementType: "geometry.fill",
-    stylers: [{ color: "#cbd5e1" }],
-  },
-  {
-    featureType: "road.highway",
-    elementType: "geometry.stroke",
-    stylers: [{ color: "#94a3b8" }],
-  },
-  {
-    featureType: "water",
-    elementType: "geometry.fill",
-    stylers: [{ color: "#e0f2fe" }],
-  },
-  {
-    featureType: "water",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#0284c7" }],
   },
 ];

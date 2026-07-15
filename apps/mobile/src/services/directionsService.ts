@@ -52,7 +52,12 @@ function decodePolyline(encoded: string): LatLng[] {
 }
 
 /**
- * Fetches directions from Google Directions API.
+ * Fetches a route from the Google Routes API (routes.googleapis.com). This is
+ * the current API — the legacy Directions API is retired and returns
+ * REQUEST_DENIED ("calling a legacy API") on new projects.
+ *
+ * Requires the "Routes API" to be enabled on the Google Cloud project and the
+ * key to permit it (a key restricted to the Maps SDK alone will be rejected).
  */
 export async function fetchGoogleRoute(
   start: LatLng,
@@ -65,52 +70,53 @@ export async function fetchGoogleRoute(
     return null;
   }
 
-  let googleMode = "walking";
-  if (mode === "bike") {
-    googleMode = "bicycling";
-  } else if (mode === "car") {
-    googleMode = "driving";
+  const travelMode = mode === "car" ? "DRIVE" : mode === "bike" ? "BICYCLE" : "WALK";
+
+  const body: Record<string, unknown> = {
+    origin: { location: { latLng: { latitude: start.latitude, longitude: start.longitude } } },
+    destination: { location: { latLng: { latitude: end.latitude, longitude: end.longitude } } },
+    travelMode,
+    polylineQuality: "HIGH_QUALITY",
+    computeAlternativeRoutes: false,
+  };
+  // routingPreference is only valid for DRIVE/TWO_WHEELER; sending it for
+  // WALK/BICYCLE makes the Routes API reject the request.
+  if (travelMode === "DRIVE") {
+    body.routingPreference = "TRAFFIC_AWARE";
   }
 
-  const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${start.latitude},${start.longitude}&destination=${end.latitude},${end.longitude}&mode=${googleMode}&key=${apiKey}`;
-
   try {
-    const res = await fetch(url);
+    const res = await fetch("https://routes.googleapis.com/directions/v2:computeRoutes", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Goog-Api-Key": apiKey,
+        // Field mask is required; only the fields we consume are requested.
+        "X-Goog-FieldMask": "routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline",
+      },
+      body: JSON.stringify(body),
+    });
+
     const data = await res.json();
 
-    if (data.status !== "OK" || !data.routes || data.routes.length === 0) {
-      // error_message surfaces the real cause, e.g. REQUEST_DENIED when the key
-      // isn't authorized for the Directions API (distinct from the Maps SDK) or
-      // ZERO_RESULTS when the mode has no path on campus.
+    if (!res.ok || !data.routes || data.routes.length === 0) {
       console.warn(
-        "Google Directions API status is not OK:",
-        data.status,
-        data.error_message ?? "",
+        "Google Routes API error:",
+        res.status,
+        JSON.stringify(data.error ?? data).slice(0, 300),
       );
       return null;
     }
 
     const route = data.routes[0];
-    const leg = route.legs[0];
+    const polyline = decodePolyline(route.polyline?.encodedPolyline ?? "");
+    const distanceMeters = route.distanceMeters ?? 0;
+    // duration arrives as a string like "780s".
+    const durationSeconds = parseInt(String(route.duration ?? "0").replace("s", ""), 10) || 0;
 
-    // Prefer the high-fidelity per-step geometry, which hugs the actual road,
-    // over route.overview_polyline (a decimated path that visibly cuts corners
-    // and slices across buildings). Fall back to the overview if steps are absent.
-    const steps = leg.steps as { polyline?: { points: string } }[] | undefined;
-    let polyline: LatLng[];
-    if (steps && steps.length > 0) {
-      polyline = [];
-      for (const step of steps) {
-        if (!step.polyline?.points) continue;
-        const segment = decodePolyline(step.polyline.points);
-        // Skip the first point of each subsequent step to avoid duplicates.
-        polyline.push(...(polyline.length > 0 ? segment.slice(1) : segment));
-      }
-    } else {
-      polyline = decodePolyline(route.overview_polyline.points);
+    if (polyline.length === 0 || distanceMeters === 0) {
+      return null;
     }
-
-    const distanceMeters = leg.distance.value;
 
     // Reject obvious off-campus detours: FUTO's internal roads are frequently
     // missing from Google's driving/bicycling graph, so the router loops out to
@@ -124,7 +130,7 @@ export async function fetchGoogleRoute(
 
     // Single shared ETA model: trust Google's traffic-aware duration but clamp
     // it to a physically plausible band (see calculateEtaMinutes).
-    const etaMinutes = calculateEtaMinutes(distanceMeters, mode, leg.duration.value);
+    const etaMinutes = calculateEtaMinutes(distanceMeters, mode, durationSeconds);
 
     return {
       polyline,
@@ -132,7 +138,7 @@ export async function fetchGoogleRoute(
       etaMinutes,
     };
   } catch (err) {
-    console.error("Google Directions fetch failed:", err);
+    console.error("Google Routes fetch failed:", err);
     return null;
   }
 }
