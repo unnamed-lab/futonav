@@ -23,6 +23,11 @@ async function getDb(): Promise<SQLite.SQLiteDatabase> {
         key text primary key,
         value text
       );
+      create table if not exists routes (
+        key text primary key,
+        data text not null,
+        created_at integer not null
+      );
     `);
   }
   return db;
@@ -72,6 +77,37 @@ export async function setLastSyncAt(ts: string): Promise<void> {
     "insert or replace into meta (key, value) values ('last_sync_at', ?)",
     ts,
   );
+}
+
+export interface CachedRoute {
+  data: string;
+  createdAt: number;
+}
+
+export async function getCachedRoute(key: string): Promise<CachedRoute | null> {
+  const database = await getDb();
+  const row = await database.getFirstAsync<{ data: string; created_at: number }>(
+    "select data, created_at from routes where key = ?",
+    key,
+  );
+  return row ? { data: row.data, createdAt: row.created_at } : null;
+}
+
+export async function putCachedRoute(
+  key: string,
+  data: string,
+  maxAgeMs?: number,
+): Promise<void> {
+  const database = await getDb();
+  const now = Date.now();
+  await database.runAsync(
+    "insert or replace into routes (key, data, created_at) values (?, ?, ?)",
+    [key, data, now],
+  );
+  // Opportunistic prune so the cache can't grow without bound over time.
+  if (maxAgeMs && maxAgeMs > 0) {
+    await database.runAsync("delete from routes where created_at < ?", now - maxAgeMs);
+  }
 }
 
 function rowToPoi(row: Record<string, unknown>): Poi {

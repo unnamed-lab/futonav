@@ -23,6 +23,7 @@ export function EtaBar() {
 
   const displayDist = route ? route.distanceMeters : estimatedRoadDist;
   const displayEta = route ? route.etaMinutes : calculateEtaMinutes(estimatedRoadDist, transportMode);
+  const isOffline = route?.source === "offline-cache" || route?.source === "offline-graph";
 
   return (
     <View style={styles.container}>
@@ -35,14 +36,21 @@ export function EtaBar() {
         </Text>
       </View>
       <View style={styles.timeCapsule}>
-        <Ionicons 
-          name={transportMode === "walking" ? "walk" : transportMode === "bike" ? "bicycle" : "car"} 
-          size={14} 
-          color={COLORS.accent} 
+        <Ionicons
+          name={transportMode === "walking" ? "walk" : transportMode === "bike" ? "bicycle" : "car"}
+          size={14}
+          color={COLORS.accent}
         />
         <Text style={styles.etaText}>{displayEta} min</Text>
         <Text style={styles.divider}>•</Text>
         <Text style={styles.distText}>{formatDistance(displayDist)}</Text>
+        {isOffline ? (
+          <>
+            <Text style={styles.divider}>•</Text>
+            <Ionicons name="cloud-offline-outline" size={12} color={COLORS.textLight} />
+            <Text style={styles.offlineText}>Offline</Text>
+          </>
+        ) : null}
       </View>
     </View>
   );
@@ -108,6 +116,12 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.semibold,
     fontSize: 13,
     color: COLORS.textMuted,
+  },
+  offlineText: {
+    fontFamily: FONTS.semibold,
+    fontSize: 11,
+    color: COLORS.textLight,
+    marginLeft: 3,
   },
 });
 

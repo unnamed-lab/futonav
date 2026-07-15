@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { View, TouchableOpacity, StyleSheet, PanResponder, Animated } from "react-native";
 import { useRouter } from "expo-router";
-import { searchPois, findRoute, calculateEtaMinutes } from "@futonav/core";
+import { searchPois } from "@futonav/core";
 import { MapCanvas } from "../src/components/MapCanvas";
 import { SearchBar } from "../src/components/SearchBar";
 import { ResultsSheet } from "../src/components/ResultsSheet";
@@ -12,7 +12,7 @@ import { useLocationStore } from "../src/stores/useLocationStore";
 import { useSettingsStore } from "../src/stores/useSettingsStore";
 import { requestPermission, startWatching } from "../src/services/locationService";
 import { seedBaseline, getCachedPois } from "../src/services/syncService";
-import { fetchGoogleRoute } from "../src/services/directionsService";
+import { resolveRoute } from "../src/services/routeService";
 import type { Poi } from "@futonav/shared";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS, SHADOWS } from "../src/theme/theme";
@@ -68,33 +68,24 @@ export default function MapScreen() {
           longitude: selectedPoi.longitude,
         };
 
-        const googleResult = await fetchGoogleRoute(start, end, transportMode);
+        // resolveRoute handles cache-first lookup, the Google Routes API,
+        // offline cache replay, and the offline OSM graph fallback. It returns
+        // null only when no trustworthy road-following route is available, in
+        // which case we draw no polyline (EtaBar still shows an estimate).
+        const resolved = await resolveRoute(start, end, transportMode);
 
         if (!active) return;
 
-        if (googleResult) {
-          setRoute({
-            polyline: googleResult.polyline,
-            distanceMeters: googleResult.distanceMeters,
-            etaMinutes: googleResult.etaMinutes,
-          });
-        } else {
-          // Google unavailable (e.g. Directions API not enabled/authorized, or
-          // offline). Fall back to the offline OSM campus road graph, which
-          // follows real roads. Only draw it when it's a genuine on-network
-          // route — never a straight line through buildings.
-          const local = findRoute(start, end, transportMode);
-          if (local.onNetwork) {
-            setRoute({
-              polyline: local.polyline,
-              distanceMeters: local.distanceMeters,
-              etaMinutes: calculateEtaMinutes(local.distanceMeters, transportMode),
-            });
-          } else {
-            // No trustworthy path — show no polyline; EtaBar still estimates.
-            setRoute(null);
-          }
-        }
+        setRoute(
+          resolved
+            ? {
+                polyline: resolved.polyline,
+                distanceMeters: resolved.distanceMeters,
+                etaMinutes: resolved.etaMinutes,
+                source: resolved.source,
+              }
+            : null,
+        );
       } else {
         setRoute(null);
       }

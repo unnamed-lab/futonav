@@ -5,6 +5,7 @@ interface RouteData {
   polyline: { latitude: number; longitude: number }[];
   distanceMeters: number;
   etaMinutes: number;
+  source?: "network" | "cache" | "offline-cache" | "offline-graph";
 }
 
 interface NavState {
