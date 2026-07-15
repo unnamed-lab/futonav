@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { View, TouchableOpacity, StyleSheet, PanResponder, Animated } from "react-native";
 import { useRouter } from "expo-router";
-import { searchPois } from "@futonav/core";
+import { searchPois, haversineMeters } from "@futonav/core";
 import { MapCanvas } from "../src/components/MapCanvas";
 import { SearchBar } from "../src/components/SearchBar";
 import { ResultsSheet } from "../src/components/ResultsSheet";
@@ -57,15 +57,43 @@ export default function MapScreen() {
   const [pois, setPois] = useState<Poi[]>([]);
   const filteredPois = useMemo(() => searchPois(query, pois), [query, pois]);
 
+  // Tracks the context of the last route we computed so we can skip redundant
+  // recomputes on every GPS tick (location updates ~every 2s). Without this,
+  // navigation fires a routing request every couple of seconds.
+  const lastRouteRef = useRef<{ poiId: string; mode: string; lat: number; lng: number } | null>(null);
+  // Only re-route once the user has moved at least this far from the last route
+  // origin (target/mode changes always re-route immediately).
+  const REROUTE_THRESHOLD_M = 30;
+
   useEffect(() => {
     let active = true;
 
     async function computeRoute() {
       if (mode === "navigating" && selectedPoi && currentPosition) {
+        const last = lastRouteRef.current;
+        const sameTarget =
+          last && last.poiId === selectedPoi.id && last.mode === transportMode;
+        if (sameTarget) {
+          const moved = haversineMeters(
+            { latitude: last.lat, longitude: last.lng },
+            { latitude: currentPosition.latitude, longitude: currentPosition.longitude },
+          );
+          if (moved < REROUTE_THRESHOLD_M) return; // keep existing route
+        }
+
         const start = currentPosition;
         const end = {
           latitude: selectedPoi.latitude,
           longitude: selectedPoi.longitude,
+        };
+
+        // Record this attempt up front so failures (e.g. offline) also throttle
+        // and don't retry on every tick.
+        lastRouteRef.current = {
+          poiId: selectedPoi.id,
+          mode: transportMode,
+          lat: currentPosition.latitude,
+          lng: currentPosition.longitude,
         };
 
         // resolveRoute handles cache-first lookup, the Google Routes API,
@@ -87,6 +115,7 @@ export default function MapScreen() {
             : null,
         );
       } else {
+        lastRouteRef.current = null;
         setRoute(null);
       }
     }
