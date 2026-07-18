@@ -13,12 +13,16 @@ reference. On hosting platforms you set env vars in the platform dashboard —
 
 ## 1. Supabase (do this first)
 
-1. **Apply the schema** to your cloud project. In the Supabase Dashboard → SQL
-   Editor, run the contents of, in order:
-   - `supabase/migrations/0001_init.sql` (pois table, indexes, trigger)
-   - `supabase/migrations/0002_rls.sql` (row-level security policies)
-   (Or with the CLI: `supabase link --project-ref ehiijxskoezohxthbles` then
-   `supabase db push`.)
+1. **Apply schema + seed** to your cloud project. In the Supabase Dashboard →
+   SQL Editor, paste and run **`supabase/setup-cloud.sql`**. It creates the
+   `pois` table + indexes + trigger (0001), the RLS policies (0002), and seeds
+   the 28 baseline campus POIs. It's idempotent (`on conflict do nothing`), so
+   re-running is safe. Regenerate it after changing the migrations or baseline
+   data with `npx tsx scripts/gen-cloud-sql.ts`.
+
+   Alternatively, once the table exists you can (re)seed over the REST API with
+   the service key:
+   `set -a; . apps/admin/.env.production; set +a; npx tsx scripts/seed-remote.ts`
 2. **Storage bucket**: create a **public** bucket named `futonavapp`
    (Storage → New bucket → Public). The admin also auto-creates it on first
    upload if the service key is present, but creating it yourself is clearer.
