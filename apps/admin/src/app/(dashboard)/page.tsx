@@ -10,6 +10,9 @@ export default async function DashboardPage() {
   let pois: Poi[] = [];
   let errorMsg = "";
 
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "http://localhost:54321";
+  const isLocalUrl = supabaseUrl.includes("localhost") || supabaseUrl.includes("127.0.0.1");
+
   try {
     const repo = getAdminPoiRepository();
     pois = await repo.fetchAll();
@@ -66,7 +69,7 @@ export default async function DashboardPage() {
           </div>
           <div className="text-xs font-mono">
             <span className="text-slate-400 block text-[9px] uppercase font-bold">Database Uplink</span>
-            <span className="text-slate-700 font-semibold">{errorMsg ? "Disconnected" : "Active (Port 54321)"}</span>
+            <span className="text-slate-700 font-semibold">{errorMsg ? "Disconnected" : isLocalUrl ? "Active (local)" : "Active (cloud)"}</span>
           </div>
         </div>
       </div>
@@ -77,8 +80,13 @@ export default async function DashboardPage() {
           <div>
             <h3 className="font-bold text-red-800 text-lg">Database Uplink Offline</h3>
             <p className="text-sm text-red-700 mt-1">{errorMsg}</p>
+            <p className="text-xs text-red-505 mt-2 font-mono">
+              Target: {supabaseUrl}
+            </p>
             <p className="text-xs text-red-505 mt-3 font-mono font-semibold">
-              ACTION REQUIRED: Ensure local Supabase Docker containers are running and exposed on port 54321.
+              {isLocalUrl
+                ? "ACTION REQUIRED: This is pointing at localhost. On a hosted deploy (e.g. Vercel), set NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY and SUPABASE_SERVICE_KEY in the project's environment variables, then redeploy. Locally, ensure Supabase is running on port 54321."
+                : "ACTION REQUIRED: Verify SUPABASE_SERVICE_KEY is set, the schema migrations have been applied to this project, and the key permits access."}
             </p>
           </div>
         </div>
