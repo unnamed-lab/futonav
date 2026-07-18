@@ -1,6 +1,6 @@
 import "server-only";
 import { randomUUID } from "crypto";
-import jwt from "jsonwebtoken";
+import { signJwt } from "./jwt";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "http://localhost:54321";
 const jwtSecret = process.env.JWT_SECRET || "super-secret-jwt-token-with-at-least-32-characters-long";
@@ -28,14 +28,7 @@ function serviceToken(): string {
   const serviceKey = process.env.SUPABASE_SERVICE_KEY;
   if (serviceKey) return serviceKey;
 
-  return jwt.sign(
-    {
-      role: "service_role",
-      iss: "supabase",
-      exp: Math.floor(Date.now() / 1000) + 60 * 10, // 10 minutes
-    },
-    jwtSecret,
-  );
+  return signJwt({ role: "service_role", iss: "supabase" }, jwtSecret, 60 * 10); // 10 min
 }
 
 function authHeaders(token: string): Record<string, string> {

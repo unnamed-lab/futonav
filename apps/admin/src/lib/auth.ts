@@ -1,7 +1,7 @@
 "use server";
 
 import { cookies } from "next/headers";
-import jwt from "jsonwebtoken";
+import { signJwt, verifyJwt } from "./jwt";
 
 const jwtSecret = process.env.JWT_SECRET || "super-secret-jwt-token-with-at-least-32-characters-long";
 const COOKIE_NAME = "futonav_admin_session";
@@ -11,7 +11,7 @@ export async function login(email: string, password: string): Promise<boolean> {
   const adminPassword = process.env.ADMIN_PASSWORD || "admin123";
 
   if (email === adminEmail && password === adminPassword) {
-    const token = jwt.sign({ email, role: "admin" }, jwtSecret, { expiresIn: "1d" });
+    const token = signJwt({ email, role: "admin" }, jwtSecret, 60 * 60 * 24); // 1 day
     const cookieStore = await cookies();
     cookieStore.set(COOKIE_NAME, token, {
       httpOnly: true,
@@ -34,10 +34,6 @@ export async function isAuthenticated(): Promise<boolean> {
   const token = cookieStore.get(COOKIE_NAME)?.value;
   if (!token) return false;
 
-  try {
-    const payload = jwt.verify(token, jwtSecret) as { role?: string };
-    return payload.role === "admin";
-  } catch {
-    return false;
-  }
+  const payload = verifyJwt(token, jwtSecret);
+  return payload?.role === "admin";
 }
