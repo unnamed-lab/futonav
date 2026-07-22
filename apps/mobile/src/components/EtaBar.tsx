@@ -8,9 +8,27 @@ import { COLORS, FONTS, SHADOWS } from "../theme/theme";
 
 export function EtaBar() {
   const currentPosition = useLocationStore((s) => s.currentPosition);
+  const permissionStatus = useLocationStore((s) => s.permissionStatus);
   const { selectedPoi, transportMode, route } = useNavStore();
 
-  if (!currentPosition || !selectedPoi) return null;
+  if (!selectedPoi) return null;
+
+  if (!currentPosition) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.navCapsule}>
+          <View style={styles.iconWrapper}>
+            <Ionicons name="location-outline" size={14} color={COLORS.white} />
+          </View>
+          <Text style={styles.title} numberOfLines={1}>
+            {permissionStatus === "denied"
+              ? "Location permission denied"
+              : "Acquiring GPS location..."}
+          </Text>
+        </View>
+      </View>
+    );
+  }
 
   // Before a real route resolves, approximate travel distance from the
   // crow-flies distance scaled by a road factor so the displayed ETA is close

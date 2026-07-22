@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { StyleSheet, View, Text } from "react-native";
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from "react-native-maps";
 import { FUTO_DEFAULT_REGION } from "@futonav/shared";
@@ -11,6 +11,7 @@ import { Ionicons } from "@expo/vector-icons";
 interface MapCanvasProps {
   pois: Poi[];
   onPoiPress: (poi: Poi) => void;
+  mapRef?: React.RefObject<MapView | null>;
 }
 
 const getShortName = (poi: Poi) => {
@@ -27,9 +28,11 @@ const getShortName = (poi: Poi) => {
   return poi.name.split(" ")[0];
 };
 
-export function MapCanvas({ pois, onPoiPress }: MapCanvasProps) {
+export function MapCanvas({ pois, onPoiPress, mapRef: externalMapRef }: MapCanvasProps) {
   const { route, mode, selectedPoi } = useNavStore();
   const mapStyle = useSettingsStore((s) => s.mapStyle);
+  const internalMapRef = useRef<MapView>(null);
+  const mapRef = externalMapRef || internalMapRef;
   
   // Track custom marker view updates to allow rendering of custom fonts/icons 
   // before freezing the layout into a static image (fixes Android/iOS clipping bugs)
@@ -40,13 +43,36 @@ export function MapCanvas({ pois, onPoiPress }: MapCanvasProps) {
     return () => clearTimeout(timer);
   }, [pois]);
 
+  // Auto-framing map camera when a POI is selected
+  useEffect(() => {
+    if (selectedPoi && mapRef.current) {
+      mapRef.current.animateToRegion({
+        latitude: selectedPoi.latitude,
+        longitude: selectedPoi.longitude,
+        latitudeDelta: 0.005,
+        longitudeDelta: 0.005,
+      }, 800);
+    }
+  }, [selectedPoi, mapRef]);
+
+  // Auto-bounding map camera to fit navigation polyline
+  useEffect(() => {
+    if (route && route.polyline.length > 0 && mapRef.current) {
+      mapRef.current.fitToCoordinates(route.polyline, {
+        edgePadding: { top: 140, right: 50, bottom: 220, left: 50 },
+        animated: true,
+      });
+    }
+  }, [route, mapRef]);
+
   return (
     <MapView
+      ref={mapRef}
       style={StyleSheet.absoluteFill}
       provider={PROVIDER_GOOGLE}
       initialRegion={FUTO_DEFAULT_REGION}
       showsUserLocation
-      showsMyLocationButton
+      showsMyLocationButton={false}
       mapType={mapStyle}
       customMapStyle={mapStyle === "standard" ? MAP_STYLE_JSON : undefined}
     >

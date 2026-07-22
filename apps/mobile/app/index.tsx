@@ -22,40 +22,19 @@ export default function MapScreen() {
   const onboardingSeen = useSettingsStore((s) => s.onboardingSeen);
   const { mode, selectedPoi, selectPoi, endNavigation, transportMode, setRoute } = useNavStore();
   const currentPosition = useLocationStore((s) => s.currentPosition);
-
-  const pan = useRef(new Animated.ValueXY()).current;
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: (_, gestureState) => {
-        // Only trigger movement if dragged beyond small threshold
-        return Math.abs(gestureState.dx) > 3 || Math.abs(gestureState.dy) > 3;
-      },
-      onPanResponderGrant: () => {
-        pan.setOffset({
-          x: (pan.x as any)._value || 0,
-          y: (pan.y as any)._value || 0,
-        });
-        pan.setValue({ x: 0, y: 0 });
-      },
-      onPanResponderMove: Animated.event(
-        [null, { dx: pan.x, dy: pan.y }],
-        { useNativeDriver: false }
-      ),
-      onPanResponderRelease: (_, gestureState) => {
-        pan.flattenOffset();
-        // If gesture was a minor nudge or tap, treat as click and open Settings
-        if (Math.abs(gestureState.dx) < 5 && Math.abs(gestureState.dy) < 5) {
-          router.push("/settings");
-        }
-      },
-    })
-  ).current;
+  const mapRef = useRef<any>(null);
 
   const [query, setQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [pois, setPois] = useState<Poi[]>([]);
-  const filteredPois = useMemo(() => searchPois(query, pois), [query, pois]);
+
+  const filteredPois = useMemo(() => {
+    let result = searchPois(query, pois);
+    if (selectedCategory) {
+      result = result.filter((p) => p.category === selectedCategory);
+    }
+    return result;
+  }, [query, selectedCategory, pois]);
 
   // Tracks the context of the last route we computed so we can skip redundant
   // recomputes on every GPS tick (location updates ~every 2s). Without this,
@@ -146,6 +125,7 @@ export default function MapScreen() {
     (poi: Poi) => {
       selectPoi(poi);
       setQuery("");
+      setSelectedCategory(null);
     },
     [selectPoi],
   );
@@ -154,15 +134,45 @@ export default function MapScreen() {
     endNavigation();
   }, [endNavigation]);
 
+  const handleRecenter = useCallback(() => {
+    if (currentPosition && mapRef.current) {
+      mapRef.current.animateToRegion(
+        {
+          latitude: currentPosition.latitude,
+          longitude: currentPosition.longitude,
+          latitudeDelta: 0.005,
+          longitudeDelta: 0.005,
+        },
+        800,
+      );
+    }
+  }, [currentPosition]);
+
+  const handleResetFilters = useCallback(() => {
+    setQuery("");
+    setSelectedCategory(null);
+  }, []);
+
+  const isSearching = query.length > 0 || selectedCategory !== null;
+
   return (
     <View style={styles.container}>
-      <MapCanvas pois={pois as Poi[]} onPoiPress={handlePoiSelect} />
+      <MapCanvas pois={pois as Poi[]} onPoiPress={handlePoiSelect} mapRef={mapRef} />
 
       {mode === "browse" ? (
         <>
-          <SearchBar onQueryChange={setQuery} />
-          {query.length > 0 && filteredPois.length > 0 ? (
-            <ResultsSheet results={filteredPois} onSelectPoi={handlePoiSelect} />
+          <SearchBar
+            onQueryChange={setQuery}
+            selectedCategory={selectedCategory}
+            onCategoryChange={setSelectedCategory}
+          />
+          {isSearching ? (
+            <ResultsSheet
+              results={filteredPois}
+              onSelectPoi={handlePoiSelect}
+              query={query}
+              onClearQuery={handleResetFilters}
+            />
           ) : null}
         </>
       ) : null}
@@ -174,27 +184,40 @@ export default function MapScreen() {
         </>
       ) : null}
 
-      <Animated.View
-        {...panResponder.panHandlers}
-        style={[
-          styles.settingsButton,
-          {
-            transform: pan.getTranslateTransform(),
-          },
-        ]}
-      >
-        <Ionicons name="settings" size={20} color={COLORS.primary} />
-      </Animated.View>
+      {/* Floating Action Button Controls Stack */}
+      <View style={styles.fabStack}>
+        {currentPosition ? (
+          <TouchableOpacity
+            style={styles.fabButton}
+            onPress={handleRecenter}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="locate" size={22} color={COLORS.primary} />
+          </TouchableOpacity>
+        ) : null}
+
+        <TouchableOpacity
+          style={styles.fabButton}
+          onPress={() => router.push("/settings")}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="settings" size={20} color={COLORS.primary} />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  settingsButton: {
+  fabStack: {
     position: "absolute",
     bottom: 40,
     right: 16,
+    gap: 12,
+    zIndex: 11,
+  },
+  fabButton: {
     backgroundColor: COLORS.surface,
     borderRadius: 16,
     width: 48,

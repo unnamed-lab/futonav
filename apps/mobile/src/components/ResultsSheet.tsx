@@ -9,10 +9,31 @@ import { COLORS, FONTS, SHADOWS, CATEGORY_THEMES } from "../theme/theme";
 interface ResultsSheetProps {
   results: Poi[];
   onSelectPoi: (poi: Poi) => void;
+  query?: string;
+  onClearQuery?: () => void;
 }
 
-export function ResultsSheet({ results, onSelectPoi }: ResultsSheetProps) {
+export function ResultsSheet({ results, onSelectPoi, query, onClearQuery }: ResultsSheetProps) {
   const currentPosition = useLocationStore((s) => s.currentPosition);
+
+  if (results.length === 0) {
+    return (
+      <View style={[styles.container, styles.emptyContainer]}>
+        <View style={styles.emptyIconBadge}>
+          <Ionicons name="search-outline" size={32} color={COLORS.textMuted} />
+        </View>
+        <Text style={styles.emptyTitle}>No Locations Found</Text>
+        <Text style={styles.emptySubtitle}>
+          {query ? `No campus buildings or POIs match "${query}"` : "No locations found in this category."}
+        </Text>
+        {onClearQuery ? (
+          <TouchableOpacity style={styles.clearBtn} onPress={onClearQuery} activeOpacity={0.8}>
+            <Text style={styles.clearBtnText}>Reset Filter</Text>
+          </TouchableOpacity>
+        ) : null}
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -127,6 +148,47 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.borderLight,
     marginLeft: 72,
     marginRight: 16,
+  },
+  emptyContainer: {
+    bottom: "auto",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 28,
+    paddingHorizontal: 20,
+  },
+  emptyIconBadge: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: COLORS.background,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  emptyTitle: {
+    fontFamily: FONTS.bold,
+    fontSize: 16,
+    color: COLORS.textMain,
+    marginBottom: 6,
+  },
+  emptySubtitle: {
+    fontFamily: FONTS.regular,
+    fontSize: 13,
+    color: COLORS.textMuted,
+    textAlign: "center",
+    lineHeight: 18,
+    marginBottom: 16,
+  },
+  clearBtn: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 10,
+  },
+  clearBtnText: {
+    fontFamily: FONTS.semibold,
+    fontSize: 12,
+    color: COLORS.white,
   },
 });
 
