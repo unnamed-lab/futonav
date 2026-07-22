@@ -13,7 +13,7 @@ interface SearchBarProps {
 
 const CATEGORIES: { label: string; value: string | null }[] = [
   { label: "All", value: null },
-  { label: "⭐ Favorites", value: "Favorites" },
+  { label: "Favorites", value: "Favorites" },
   { label: "Admin", value: "Admin" },
   { label: "Library", value: "Library" },
   { label: "Department", value: "Department" },
@@ -70,12 +70,12 @@ export function SearchBar({
         >
           {CATEGORIES.map((cat) => {
             const isActive = selectedCategory === cat.value;
-            const theme = cat.value ? CATEGORY_THEMES[cat.value] : null;
+            const theme = cat.value && cat.value !== "Favorites" ? CATEGORY_THEMES[cat.value as PoiCategoryType] : null;
 
             return (
               <TouchableOpacity
                 key={cat.label}
-                onPress={() => onCategoryChange(cat.value)}
+                onPress={() => onCategoryChange(isActive ? null : cat.value)}
                 style={[
                   styles.chip,
                   isActive && styles.chipActive,

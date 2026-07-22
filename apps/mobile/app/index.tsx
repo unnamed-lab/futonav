@@ -197,6 +197,7 @@ export default function MapScreen() {
               onSelectPoi={handlePoiSelect}
               query={query}
               onClearQuery={handleResetFilters}
+              onClose={handleResetFilters}
             />
           ) : null}
         </>

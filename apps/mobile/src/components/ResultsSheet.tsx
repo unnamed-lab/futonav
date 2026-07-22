@@ -11,14 +11,20 @@ interface ResultsSheetProps {
   onSelectPoi: (poi: Poi) => void;
   query?: string;
   onClearQuery?: () => void;
+  onClose?: () => void;
 }
 
-export function ResultsSheet({ results, onSelectPoi, query, onClearQuery }: ResultsSheetProps) {
+export function ResultsSheet({ results, onSelectPoi, query, onClearQuery, onClose }: ResultsSheetProps) {
   const currentPosition = useLocationStore((s) => s.currentPosition);
 
   if (results.length === 0) {
     return (
       <View style={[styles.container, styles.emptyContainer]}>
+        {onClose ? (
+          <TouchableOpacity style={styles.closeSheetBtn} onPress={onClose} activeOpacity={0.7}>
+            <Ionicons name="close" size={18} color={COLORS.textMuted} />
+          </TouchableOpacity>
+        ) : null}
         <View style={styles.emptyIconBadge}>
           <Ionicons name="search-outline" size={32} color={COLORS.textMuted} />
         </View>
@@ -37,7 +43,14 @@ export function ResultsSheet({ results, onSelectPoi, query, onClearQuery }: Resu
 
   return (
     <View style={styles.container}>
-      <Text style={styles.headerTitle}>Search Results ({results.length})</Text>
+      <View style={styles.headerRow}>
+        <Text style={styles.headerTitle}>Search Results ({results.length})</Text>
+        {onClose ? (
+          <TouchableOpacity style={styles.closeSheetBtn} onPress={onClose} activeOpacity={0.7}>
+            <Ionicons name="close" size={18} color={COLORS.textMuted} />
+          </TouchableOpacity>
+        ) : null}
+      </View>
       <FlatList
         data={results}
         keyExtractor={(item) => item.id}
@@ -93,14 +106,22 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     ...SHADOWS.lg,
   },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingBottom: 12,
+  },
   headerTitle: {
     fontFamily: FONTS.bold,
     fontSize: 11,
     color: COLORS.textMuted,
-    paddingHorizontal: 20,
-    paddingBottom: 12,
     textTransform: "uppercase",
     letterSpacing: 0.5,
+  },
+  closeSheetBtn: {
+    padding: 2,
   },
   listContent: {
     paddingHorizontal: 4,

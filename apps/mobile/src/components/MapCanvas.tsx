@@ -34,14 +34,14 @@ export function MapCanvas({ pois, onPoiPress, mapRef: externalMapRef }: MapCanva
   const internalMapRef = useRef<MapView>(null);
   const mapRef = externalMapRef || internalMapRef;
   
-  // Track custom marker view updates to allow rendering of custom fonts/icons 
-  // before freezing the layout into a static image (fixes Android/iOS clipping bugs)
+  // Turn off continuous native marker redrawing to prevent map type switching lag
   const [tracksView, setTracksView] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => setTracksView(false), 2000);
+    // Freeze marker view bitmap after initial layout pass (500ms)
+    const timer = setTimeout(() => setTracksView(false), 500);
     return () => clearTimeout(timer);
-  }, [pois]);
+  }, []);
 
   // Auto-framing map camera when a POI is selected
   useEffect(() => {
@@ -65,6 +65,8 @@ export function MapCanvas({ pois, onPoiPress, mapRef: externalMapRef }: MapCanva
     }
   }, [route, mapRef]);
 
+  const activeMapType = mapStyle === "satellite" ? "hybrid" : "standard";
+
   return (
     <MapView
       ref={mapRef}
@@ -73,7 +75,7 @@ export function MapCanvas({ pois, onPoiPress, mapRef: externalMapRef }: MapCanva
       initialRegion={FUTO_DEFAULT_REGION}
       showsUserLocation
       showsMyLocationButton={false}
-      mapType={mapStyle}
+      mapType={activeMapType}
       customMapStyle={mapStyle === "standard" ? MAP_STYLE_JSON : undefined}
     >
       {pois.map((poi) => {
@@ -86,7 +88,7 @@ export function MapCanvas({ pois, onPoiPress, mapRef: externalMapRef }: MapCanva
             key={poi.id}
             coordinate={{ latitude: poi.latitude, longitude: poi.longitude }}
             onPress={() => onPoiPress(poi)}
-            tracksViewChanges={tracksView}
+            tracksViewChanges={tracksView || isSelected}
             anchor={{ x: 0.5, y: 0.67 }}
           >
             <View style={styles.markerContainer}>
