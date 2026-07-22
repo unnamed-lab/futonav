@@ -29,10 +29,18 @@ export default function PoiDetailScreen() {
   const eta = walkingEtaMinutes(dist);
   const theme = poi ? (CATEGORY_THEMES[poi.category as PoiCategoryType] || CATEGORY_THEMES.Other) : CATEGORY_THEMES.Other;
 
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/");
+    }
+  };
+
   const handleNavigate = () => {
     if (poi) {
       selectPoi(poi);
-      router.back();
+      handleBack();
     }
   };
 
@@ -42,7 +50,7 @@ export default function PoiDetailScreen() {
         <View style={styles.container}>
           <Text style={styles.errorText}>POI not found</Text>
           <Text style={styles.errorSubtext}>ID: {id}</Text>
-          <TouchableOpacity style={styles.outlineButton} onPress={() => router.back()}>
+          <TouchableOpacity style={styles.outlineButton} onPress={handleBack}>
             <Text style={styles.outlineButtonText}>Back</Text>
           </TouchableOpacity>
         </View>
@@ -59,7 +67,7 @@ export default function PoiDetailScreen() {
             <Ionicons name={theme.icon as any} size={14} color={theme.color} style={styles.badgeIcon} />
             <Text style={[styles.badgeText, { color: theme.color }]}>{poi.category}</Text>
           </View>
-          <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
+          <TouchableOpacity style={styles.closeButton} onPress={handleBack}>
             <Ionicons name="close" size={20} color={COLORS.textMuted} />
           </TouchableOpacity>
         </View>
@@ -103,7 +111,7 @@ export default function PoiDetailScreen() {
             <Text style={styles.navigateButtonText}>Start Navigation</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.outlineButton} onPress={() => router.back()} activeOpacity={0.8}>
+          <TouchableOpacity style={styles.outlineButton} onPress={handleBack} activeOpacity={0.8}>
             <Text style={styles.outlineButtonText}>Cancel</Text>
           </TouchableOpacity>
         </View>

@@ -55,12 +55,20 @@ export default function SettingsScreen() {
     );
   };
 
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/");
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         {/* Custom Header */}
         <View style={styles.header}>
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()} activeOpacity={0.8}>
+          <TouchableOpacity style={styles.backButton} onPress={handleBack} activeOpacity={0.8}>
             <Ionicons name="arrow-back" size={20} color={COLORS.primary} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Settings</Text>
