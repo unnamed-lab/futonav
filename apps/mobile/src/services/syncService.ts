@@ -9,8 +9,9 @@ import { createSqliteSyncStore, getAllPois, clearCache } from "./sqliteCache";
 const store = createSqliteSyncStore();
 
 function getSource(): SyncSource {
-  const url = Constants.expoConfig?.extra?.supabaseUrl as string;
-  const anonKey = Constants.expoConfig?.extra?.supabaseAnonKey as string;
+  const url = (process.env.EXPO_PUBLIC_SUPABASE_URL || Constants.expoConfig?.extra?.supabaseUrl || "") as string;
+  const anonKey = (process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || Constants.expoConfig?.extra?.supabaseAnonKey || "") as string;
+
   const client = getSupabaseClient(url, anonKey);
   const repo = createPoiRepository(client);
   return { fetchSince: (ts) => repo.fetchSince(ts) };

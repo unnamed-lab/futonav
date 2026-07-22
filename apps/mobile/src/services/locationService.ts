@@ -19,9 +19,9 @@ export async function startWatching() {
 
   subscription = await Location.watchPositionAsync(
     {
-      accuracy: Location.Accuracy.High,
+      accuracy: Location.Accuracy.BestForNavigation,
       timeInterval: LOCATION_UPDATE_MS,
-      distanceInterval: 5,
+      distanceInterval: 1,
     },
     (loc) => {
       const { latitude, longitude } = loc.coords;
