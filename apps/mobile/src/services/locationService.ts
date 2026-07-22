@@ -20,6 +20,7 @@ export async function startWatching() {
 
   // Immediately query highest accuracy GPS position on start
   try {
+    
     const initialLoc = await Location.getCurrentPositionAsync({
       accuracy: Location.Accuracy.Highest,
     });
@@ -37,7 +38,7 @@ export async function startWatching() {
     {
       accuracy: Location.Accuracy.BestForNavigation,
       timeInterval: LOCATION_UPDATE_MS,
-      distanceInterval: 1,
+      distanceInterval: 0,
     },
     (loc) => {
       const { latitude, longitude } = loc.coords;

@@ -8,6 +8,8 @@ import { useSettingsStore } from "../stores/useSettingsStore";
 import { COLORS, FONTS, SHADOWS, MAP_STYLE_JSON, CATEGORY_THEMES } from "../theme/theme";
 import { Ionicons } from "@expo/vector-icons";
 
+import { useLocationStore } from "../stores/useLocationStore";
+
 interface MapCanvasProps {
   pois: Poi[];
   onPoiPress: (poi: Poi) => void;
@@ -31,6 +33,8 @@ const getShortName = (poi: Poi) => {
 export function MapCanvas({ pois, onPoiPress, mapRef: externalMapRef }: MapCanvasProps) {
   const { route, mode, selectedPoi } = useNavStore();
   const mapStyle = useSettingsStore((s) => s.mapStyle);
+  const currentPosition = useLocationStore((s) => s.currentPosition);
+  const heading = useLocationStore((s) => s.heading);
   const internalMapRef = useRef<MapView>(null);
   const mapRef = externalMapRef || internalMapRef;
   
@@ -80,6 +84,21 @@ export function MapCanvas({ pois, onPoiPress, mapRef: externalMapRef }: MapCanva
       mapType={activeMapType}
       customMapStyle={mapStyle === "standard" ? MAP_STYLE_JSON : undefined}
     >
+      {currentPosition ? (
+        <Marker
+          coordinate={currentPosition}
+          anchor={{ x: 0.5, y: 0.5 }}
+          flat
+          rotation={heading ?? 0}
+          zIndex={999}
+          tracksViewChanges={false}
+        >
+          <View style={styles.userLocationMarker}>
+            <View style={styles.userLocationPulse} />
+            <View style={styles.userLocationDot} />
+          </View>
+        </Marker>
+      ) : null}
       {pois.map((poi) => {
         const theme = CATEGORY_THEMES[poi.category] || CATEGORY_THEMES.Other;
         const isSelected = mode === "navigating" && selectedPoi?.id === poi.id;
@@ -191,6 +210,28 @@ const styles = StyleSheet.create({
   },
   markerLabelTextActive: {
     color: COLORS.white,
+  },
+  userLocationMarker: {
+    width: 24,
+    height: 24,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  userLocationPulse: {
+    position: "absolute",
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "rgba(14, 165, 233, 0.25)",
+  },
+  userLocationDot: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: "#0EA5E9",
+    borderWidth: 2.5,
+    borderColor: "#FFFFFF",
+    ...SHADOWS.md,
   },
 });
 
