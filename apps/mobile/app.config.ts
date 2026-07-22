@@ -28,6 +28,7 @@ export default (): ExpoConfig => ({
   },
   android: {
     package: "com.unnamedcodes.futonav",
+    versionCode: 1,
     adaptiveIcon: {
       backgroundColor: "#E6F4FE",
       foregroundImage: "./assets/android-icon-foreground.png",

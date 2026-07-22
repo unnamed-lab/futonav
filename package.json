@@ -6,6 +6,9 @@
   "scripts": {
     "dev:mobile": "turbo run dev --filter=@futonav/mobile",
     "dev:admin": "turbo run dev --filter=@futonav/admin",
+    "update:mobile": "pnpm --filter @futonav/mobile update",
+    "update:mobile:preview": "pnpm --filter @futonav/mobile update:preview",
+    "update:mobile:production": "pnpm --filter @futonav/mobile update:production",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
