@@ -48,17 +48,21 @@ export async function startWatching() {
     },
   );
 
-  try {
-    headingSubscription = await Location.watchHeadingAsync((data) => {
-      if (data.trueHeading >= 0) {
-        useLocationStore.getState().setHeading(data.trueHeading);
-      } else if (data.magHeading >= 0) {
-        useLocationStore.getState().setHeading(data.magHeading);
-      }
-    });
-  } catch {
-    // Compass hardware sensors unavailable on simulator or device
-  }
+  // Defer heading sensor listener to prevent Expo Android LocationModule Kotlin init crash
+  setTimeout(async () => {
+    try {
+      if (!subscription) return;
+      headingSubscription = await Location.watchHeadingAsync((data) => {
+        if (data.trueHeading >= 0) {
+          useLocationStore.getState().setHeading(data.trueHeading);
+        } else if (data.magHeading >= 0) {
+          useLocationStore.getState().setHeading(data.magHeading);
+        }
+      });
+    } catch {
+      // Compass hardware sensors unavailable on simulator or device
+    }
+  }, 1000);
 }
 
 export function stopWatching() {
