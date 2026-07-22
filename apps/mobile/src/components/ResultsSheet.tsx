@@ -94,10 +94,10 @@ export function ResultsSheet({ results, onSelectPoi, query, onClearQuery, onClos
 const styles = StyleSheet.create({
   container: {
     position: "absolute",
-    top: 130,
+    top: 165,
     left: 16,
     right: 16,
-    bottom: 110,
+    bottom: 95,
     zIndex: 9,
     backgroundColor: COLORS.surface,
     borderRadius: 20,
