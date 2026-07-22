@@ -59,11 +59,15 @@ function decodePolyline(encoded: string): LatLng[] {
  * Requires the "Routes API" to be enabled on the Google Cloud project and the
  * key to permit it (a key restricted to the Maps SDK alone will be rejected).
  */
+let routesApiDisabled = false;
+
 export async function fetchGoogleRoute(
   start: LatLng,
   end: LatLng,
   mode: TransportMode,
 ): Promise<GoogleRouteResult | null> {
+  if (routesApiDisabled) return null;
+
   const apiKey = getGoogleMapsKey();
   if (!apiKey) {
     console.warn("Google Maps API Key not available.");
@@ -79,8 +83,6 @@ export async function fetchGoogleRoute(
     polylineQuality: "HIGH_QUALITY",
     computeAlternativeRoutes: false,
   };
-  // routingPreference is only valid for DRIVE/TWO_WHEELER; sending it for
-  // WALK/BICYCLE makes the Routes API reject the request.
   if (travelMode === "DRIVE") {
     body.routingPreference = "TRAFFIC_AWARE";
   }
@@ -91,7 +93,6 @@ export async function fetchGoogleRoute(
       headers: {
         "Content-Type": "application/json",
         "X-Goog-Api-Key": apiKey,
-        // Field mask is required; only the fields we consume are requested.
         "X-Goog-FieldMask": "routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline",
       },
       body: JSON.stringify(body),
@@ -100,11 +101,18 @@ export async function fetchGoogleRoute(
     const data = await res.json();
 
     if (!res.ok || !data.routes || data.routes.length === 0) {
-      console.warn(
-        "Google Routes API error:",
-        res.status,
-        JSON.stringify(data.error ?? data).slice(0, 300),
-      );
+      if (res.status === 403) {
+        routesApiDisabled = true;
+        console.warn(
+          "Google Routes API is not enabled on this GCP project (403). Falling back to internal FUTO road network graph.",
+        );
+      } else {
+        console.warn(
+          "Google Routes API error:",
+          res.status,
+          JSON.stringify(data.error ?? data).slice(0, 300),
+        );
+      }
       return null;
     }
 

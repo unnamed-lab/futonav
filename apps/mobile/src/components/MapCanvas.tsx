@@ -75,6 +75,8 @@ export function MapCanvas({ pois, onPoiPress, mapRef: externalMapRef }: MapCanva
       initialRegion={FUTO_DEFAULT_REGION}
       showsUserLocation
       showsMyLocationButton={false}
+      userLocationUpdateInterval={1000}
+      userLocationFastestInterval={1000}
       mapType={activeMapType}
       customMapStyle={mapStyle === "standard" ? MAP_STYLE_JSON : undefined}
     >

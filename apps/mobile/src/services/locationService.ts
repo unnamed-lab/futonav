@@ -18,6 +18,21 @@ export async function startWatching() {
   const granted = await requestPermission();
   if (!granted) return;
 
+  // Immediately query highest accuracy GPS position on start
+  try {
+    const initialLoc = await Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.Highest,
+    });
+    if (initialLoc?.coords) {
+      useLocationStore.getState().setCurrentPosition(
+        { latitude: initialLoc.coords.latitude, longitude: initialLoc.coords.longitude },
+        initialLoc.coords.accuracy ?? 0,
+      );
+    }
+  } catch {
+    // Fall back to stream listener
+  }
+
   subscription = await Location.watchPositionAsync(
     {
       accuracy: Location.Accuracy.BestForNavigation,
