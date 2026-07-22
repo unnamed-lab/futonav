@@ -11,7 +11,7 @@ import { useNavStore } from "../src/stores/useNavStore";
 import { useLocationStore } from "../src/stores/useLocationStore";
 import { useSettingsStore } from "../src/stores/useSettingsStore";
 import { requestPermission, startWatching } from "../src/services/locationService";
-import { seedBaseline, getCachedPois } from "../src/services/syncService";
+import { seedBaseline, getCachedPois, syncPois } from "../src/services/syncService";
 import { resolveRoute } from "../src/services/routeService";
 import type { Poi } from "@futonav/shared";
 import { Ionicons } from "@expo/vector-icons";
@@ -113,9 +113,22 @@ export default function MapScreen() {
   }, [onboardingSeen, router]);
 
   useEffect(() => {
-    seedBaseline().then(() =>
-      getCachedPois().then(setPois),
-    );
+    seedBaseline()
+      .then(() => getCachedPois())
+      .then((cached) => {
+        setPois(cached);
+        // Perform background delta sync from Supabase DB
+        return syncPois();
+      })
+      .then((res) => {
+        if (res && !res.offline && res.synced > 0) {
+          getCachedPois().then(setPois);
+        }
+      })
+      .catch(() => {
+        // Silently preserve offline cached POIs
+      });
+
     requestPermission().then((granted) => {
       if (granted) startWatching();
     });
