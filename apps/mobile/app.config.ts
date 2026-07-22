@@ -7,7 +7,14 @@ export default (): ExpoConfig => ({
   version: "1.0.0",
   orientation: "portrait",
   userInterfaceStyle: "light",
-  icon: "./assets/icon.png",
+  updates: {
+    url: "https://u.expo.dev/935a43a7-aa4c-4af9-9d0a-c1bee9c8b4de",
+    enabled: true,
+    fallbackToCacheTimeout: 0,
+  },
+  runtimeVersion: {
+    policy: "appVersion",
+  },
   ios: {
     supportsTablet: true,
     bundleIdentifier: "com.unnamedcodes.futonav",

@@ -6,6 +6,8 @@ import { useNavStore } from "../stores/useNavStore";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS, FONTS, SHADOWS, CATEGORY_THEMES } from "../theme/theme";
 
+import { useFavoritesStore } from "../stores/useFavoritesStore";
+
 interface PoiCardProps {
   poi: Poi;
   onEnd: () => void;
@@ -14,6 +16,8 @@ interface PoiCardProps {
 export function PoiCard({ poi, onEnd }: PoiCardProps) {
   const currentPosition = useLocationStore((s) => s.currentPosition);
   const { transportMode, setTransportMode, route } = useNavStore();
+  const toggleFavorite = useFavoritesStore((s) => s.toggleFavorite);
+  const isFav = useFavoritesStore((s) => s.favoriteIds.includes(poi.id));
 
   const straightLineDist = currentPosition
     ? haversineMeters(
@@ -34,6 +38,18 @@ export function PoiCard({ poi, onEnd }: PoiCardProps) {
           <Ionicons name={theme.icon as any} size={13} color={theme.color} style={styles.badgeIcon} />
           <Text style={[styles.badgeText, { color: theme.color }]}>{poi.category}</Text>
         </View>
+
+        <TouchableOpacity
+          onPress={() => toggleFavorite(poi.id)}
+          style={styles.favoriteButton}
+          activeOpacity={0.7}
+        >
+          <Ionicons
+            name={isFav ? "star" : "star-outline"}
+            size={20}
+            color={isFav ? "#F59E0B" : COLORS.textLight}
+          />
+        </TouchableOpacity>
       </View>
 
       <Text style={styles.name} numberOfLines={1}>{poi.name}</Text>
@@ -134,7 +150,12 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 10,
+  },
+  favoriteButton: {
+    padding: 4,
   },
   badge: {
     flexDirection: "row",

@@ -11,8 +11,9 @@ interface SearchBarProps {
   placeholder?: string;
 }
 
-const CATEGORIES: { label: string; value: PoiCategoryType | null }[] = [
+const CATEGORIES: { label: string; value: string | null }[] = [
   { label: "All", value: null },
+  { label: "⭐ Favorites", value: "Favorites" },
   { label: "Admin", value: "Admin" },
   { label: "Library", value: "Library" },
   { label: "Department", value: "Department" },

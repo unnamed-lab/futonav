@@ -28,6 +28,22 @@ export async function syncPois(): Promise<{ synced: number; offline: boolean }> 
   return runDeltaSync(store, getSource());
 }
 
+export function subscribeToRealtimePois(onUpdate: () => void): () => void {
+  // Triggers background check every 60s while the app is active
+  const interval = setInterval(async () => {
+    try {
+      const res = await syncPois();
+      if (!res.offline && res.synced > 0) {
+        onUpdate();
+      }
+    } catch {
+      // Background sync exception handled silently
+    }
+  }, 60000);
+
+  return () => clearInterval(interval);
+}
+
 export function getCachedPois(): Promise<Poi[]> {
   return getAllPois();
 }

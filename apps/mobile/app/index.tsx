@@ -10,8 +10,9 @@ import { EtaBar } from "../src/components/EtaBar";
 import { useNavStore } from "../src/stores/useNavStore";
 import { useLocationStore } from "../src/stores/useLocationStore";
 import { useSettingsStore } from "../src/stores/useSettingsStore";
+import { useFavoritesStore } from "../src/stores/useFavoritesStore";
 import { requestPermission, startWatching } from "../src/services/locationService";
-import { seedBaseline, getCachedPois, syncPois } from "../src/services/syncService";
+import { seedBaseline, getCachedPois, syncPois, subscribeToRealtimePois } from "../src/services/syncService";
 import { resolveRoute } from "../src/services/routeService";
 import type { Poi } from "@futonav/shared";
 import { Ionicons } from "@expo/vector-icons";
@@ -22,6 +23,7 @@ export default function MapScreen() {
   const onboardingSeen = useSettingsStore((s) => s.onboardingSeen);
   const { mode, selectedPoi, selectPoi, endNavigation, transportMode, setRoute } = useNavStore();
   const currentPosition = useLocationStore((s) => s.currentPosition);
+  const favoriteIds = useFavoritesStore((s) => s.favoriteIds);
   const mapRef = useRef<any>(null);
 
   const [query, setQuery] = useState("");
@@ -30,11 +32,13 @@ export default function MapScreen() {
 
   const filteredPois = useMemo(() => {
     let result = searchPois(query, pois);
-    if (selectedCategory) {
+    if (selectedCategory === "Favorites") {
+      result = result.filter((p) => favoriteIds.includes(p.id));
+    } else if (selectedCategory) {
       result = result.filter((p) => p.category === selectedCategory);
     }
     return result;
-  }, [query, selectedCategory, pois]);
+  }, [query, selectedCategory, pois, favoriteIds]);
 
   // Tracks the context of the last route we computed so we can skip redundant
   // recomputes on every GPS tick (location updates ~every 2s). Without this,
@@ -129,9 +133,17 @@ export default function MapScreen() {
         // Silently preserve offline cached POIs
       });
 
+    const unsubRealtime = subscribeToRealtimePois(() => {
+      getCachedPois().then(setPois);
+    });
+
     requestPermission().then((granted) => {
       if (granted) startWatching();
     });
+
+    return () => {
+      unsubRealtime();
+    };
   }, []);
 
   const handlePoiSelect = useCallback(

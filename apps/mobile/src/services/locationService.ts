@@ -3,6 +3,7 @@ import { LOCATION_UPDATE_MS } from "@futonav/shared";
 import { useLocationStore } from "../stores/useLocationStore";
 
 let subscription: Location.LocationSubscription | null = null;
+let headingSubscription: Location.LocationSubscription | null = null;
 
 export async function requestPermission(): Promise<boolean> {
   const { status } = await Location.requestForegroundPermissionsAsync();
@@ -31,11 +32,25 @@ export async function startWatching() {
       );
     },
   );
+
+  try {
+    headingSubscription = await Location.watchHeadingAsync((data) => {
+      if (data.trueHeading >= 0) {
+        useLocationStore.getState().setHeading(data.trueHeading);
+      } else if (data.magHeading >= 0) {
+        useLocationStore.getState().setHeading(data.magHeading);
+      }
+    });
+  } catch {
+    // Compass hardware sensors unavailable on simulator or device
+  }
 }
 
 export function stopWatching() {
   subscription?.remove();
   subscription = null;
+  headingSubscription?.remove();
+  headingSubscription = null;
 }
 
 export async function getCurrentLocation(): Promise<Location.LocationObject | null> {
