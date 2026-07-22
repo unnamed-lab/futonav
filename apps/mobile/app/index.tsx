@@ -18,6 +18,8 @@ import type { Poi } from "@futonav/shared";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS, SHADOWS } from "../src/theme/theme";
 
+import { ArrivalModal } from "../src/components/ArrivalModal";
+
 export default function MapScreen() {
   const router = useRouter();
   const onboardingSeen = useSettingsStore((s) => s.onboardingSeen);
@@ -29,6 +31,7 @@ export default function MapScreen() {
   const [query, setQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [pois, setPois] = useState<Poi[]>([]);
+  const [arrivedModalPoi, setArrivedModalPoi] = useState<Poi | null>(null);
 
   const filteredPois = useMemo(() => {
     let result = searchPois(query, pois);
@@ -44,15 +47,24 @@ export default function MapScreen() {
   // recomputes on every GPS tick (location updates ~every 2s). Without this,
   // navigation fires a routing request every couple of seconds.
   const lastRouteRef = useRef<{ poiId: string; mode: string; lat: number; lng: number } | null>(null);
-  // Only re-route once the user has moved at least this far from the last route
+  // Only re-route once the user has moved at least 35 meters from the last route
   // origin (target/mode changes always re-route immediately).
-  const REROUTE_THRESHOLD_M = 30;
+  const REROUTE_THRESHOLD_M = 35;
 
   useEffect(() => {
     let active = true;
 
     async function computeRoute() {
       if (mode === "navigating" && selectedPoi && currentPosition) {
+        const distToTarget = haversineMeters(
+          { latitude: currentPosition.latitude, longitude: currentPosition.longitude },
+          { latitude: selectedPoi.latitude, longitude: selectedPoi.longitude },
+        );
+
+        if (distToTarget <= 15 && !arrivedModalPoi) {
+          setArrivedModalPoi(selectedPoi);
+        }
+
         const last = lastRouteRef.current;
         const sameTarget =
           last && last.poiId === selectedPoi.id && last.mode === transportMode;
@@ -227,9 +239,18 @@ export default function MapScreen() {
           onPress={() => router.push("/settings")}
           activeOpacity={0.8}
         >
-          <Ionicons name="settings" size={20} color={COLORS.primary} />
+          <Ionicons name="settings-outline" size={22} color={COLORS.primary} />
         </TouchableOpacity>
       </View>
+
+      <ArrivalModal
+        visible={!!arrivedModalPoi}
+        poi={arrivedModalPoi}
+        onDismiss={() => {
+          setArrivedModalPoi(null);
+          endNavigation();
+        }}
+      />
     </View>
   );
 }

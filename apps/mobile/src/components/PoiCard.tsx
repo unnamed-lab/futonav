@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Share } from "react-native";
 import type { Poi, PoiCategoryType } from "@futonav/shared";
 import { formatDistance, calculateEtaMinutes, haversineMeters } from "@futonav/core";
 import { useLocationStore } from "../stores/useLocationStore";
@@ -18,6 +18,18 @@ export function PoiCard({ poi, onEnd }: PoiCardProps) {
   const { transportMode, setTransportMode, route } = useNavStore();
   const toggleFavorite = useFavoritesStore((s) => s.toggleFavorite);
   const isFav = useFavoritesStore((s) => s.favoriteIds.includes(poi.id));
+
+  const handleShare = async () => {
+    try {
+      await Share.share({
+        title: poi.name,
+        message: `Check out ${poi.name} on the FutoNav campus map: https://futonav.app/poi/${poi.id}`,
+        url: `futonav://poi/${poi.id}`,
+      });
+    } catch {
+      // Share sheet closed
+    }
+  };
 
   const straightLineDist = currentPosition
     ? haversineMeters(
@@ -39,17 +51,23 @@ export function PoiCard({ poi, onEnd }: PoiCardProps) {
           <Text style={[styles.badgeText, { color: theme.color }]}>{poi.category}</Text>
         </View>
 
-        <TouchableOpacity
-          onPress={() => toggleFavorite(poi.id)}
-          style={styles.favoriteButton}
-          activeOpacity={0.7}
-        >
-          <Ionicons
-            name={isFav ? "star" : "star-outline"}
-            size={20}
-            color={isFav ? "#F59E0B" : COLORS.textLight}
-          />
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <TouchableOpacity onPress={handleShare} style={styles.actionButton} activeOpacity={0.7}>
+            <Ionicons name="share-outline" size={19} color={COLORS.textMuted} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => toggleFavorite(poi.id)}
+            style={styles.actionButton}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name={isFav ? "star" : "star-outline"}
+              size={20}
+              color={isFav ? "#F59E0B" : COLORS.textLight}
+            />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <Text style={styles.name} numberOfLines={1}>{poi.name}</Text>
@@ -154,7 +172,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 10,
   },
-  favoriteButton: {
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  actionButton: {
     padding: 4,
   },
   badge: {

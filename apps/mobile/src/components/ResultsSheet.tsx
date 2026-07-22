@@ -6,6 +6,8 @@ import { PoiImage } from "./PoiImage";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS, FONTS, SHADOWS, CATEGORY_THEMES } from "../theme/theme";
 
+import { useRecentSearchesStore } from "../stores/useRecentSearchesStore";
+
 interface ResultsSheetProps {
   results: Poi[];
   onSelectPoi: (poi: Poi) => void;
@@ -16,6 +18,12 @@ interface ResultsSheetProps {
 
 export function ResultsSheet({ results, onSelectPoi, query, onClearQuery, onClose }: ResultsSheetProps) {
   const currentPosition = useLocationStore((s) => s.currentPosition);
+  const addRecentPoi = useRecentSearchesStore((s) => s.addRecentPoi);
+
+  const handlePoiClick = (poi: Poi) => {
+    addRecentPoi(poi);
+    onSelectPoi(poi);
+  };
 
   if (results.length === 0) {
     return (
@@ -66,7 +74,7 @@ export function ResultsSheet({ results, onSelectPoi, query, onClearQuery, onClos
           const theme = CATEGORY_THEMES[item.category as PoiCategoryType] || CATEGORY_THEMES.Other;
 
           return (
-            <TouchableOpacity style={styles.row} onPress={() => onSelectPoi(item)} activeOpacity={0.7}>
+            <TouchableOpacity style={styles.row} onPress={() => handlePoiClick(item)} activeOpacity={0.7}>
               <View style={styles.thumb}>
                 <PoiImage poi={item} width={44} height={44} borderRadius={12} iconScale={0.42} />
               </View>

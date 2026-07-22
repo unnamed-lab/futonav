@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet } from "react-native";
-import { formatDistance, calculateEtaMinutes, haversineMeters } from "@futonav/core";
+import { formatDistance, calculateEtaMinutes, haversineMeters, calculateManeuvers } from "@futonav/core";
 import { ROAD_DISTANCE_FACTOR } from "@futonav/shared";
 import { useLocationStore } from "../stores/useLocationStore";
 import { useNavStore } from "../stores/useNavStore";
@@ -30,9 +30,6 @@ export function EtaBar() {
     );
   }
 
-  // Before a real route resolves, approximate travel distance from the
-  // crow-flies distance scaled by a road factor so the displayed ETA is close
-  // to the eventual routed value and doesn't visibly jump when it arrives.
   const straightLineDist = haversineMeters(
     { latitude: currentPosition.latitude, longitude: currentPosition.longitude },
     { latitude: selectedPoi.latitude, longitude: selectedPoi.longitude },
@@ -43,8 +40,42 @@ export function EtaBar() {
   const displayEta = route ? route.etaMinutes : calculateEtaMinutes(estimatedRoadDist, transportMode);
   const isOffline = route?.source === "offline-cache" || route?.source === "offline-graph";
 
+  const maneuvers = route?.polyline && route.polyline.length >= 2 ? calculateManeuvers(route.polyline) : [];
+  const nextManeuver = maneuvers.length > 0 ? maneuvers[0] : null;
+
+  const getManeuverIcon = (type: string) => {
+    switch (type) {
+      case "turn-right":
+      case "sharp-right":
+        return "arrow-forward";
+      case "turn-left":
+      case "sharp-left":
+        return "arrow-back";
+      case "arrive":
+        return "location";
+      default:
+        return "arrow-up";
+    }
+  };
+
   return (
     <View style={styles.container}>
+      {nextManeuver ? (
+        <View style={styles.maneuverCapsule}>
+          <View style={styles.maneuverIconWrapper}>
+            <Ionicons name={getManeuverIcon(nextManeuver.type) as any} size={16} color={COLORS.white} />
+          </View>
+          <View style={styles.maneuverInfo}>
+            <Text style={styles.maneuverText} numberOfLines={1}>
+              {nextManeuver.instruction}
+            </Text>
+            <Text style={styles.maneuverSubtext}>
+              in {formatDistance(nextManeuver.distanceMeters)}
+            </Text>
+          </View>
+        </View>
+      ) : null}
+
       <View style={styles.navCapsule}>
         <View style={styles.iconWrapper}>
           <Ionicons name="navigate" size={14} color={COLORS.white} />
@@ -83,6 +114,37 @@ const styles = StyleSheet.create({
     zIndex: 10,
     flexDirection: "column",
     gap: 8,
+  },
+  maneuverCapsule: {
+    backgroundColor: COLORS.surface,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    ...SHADOWS.md,
+  },
+  maneuverIconWrapper: {
+    backgroundColor: COLORS.accent,
+    borderRadius: 10,
+    padding: 8,
+    marginRight: 12,
+  },
+  maneuverInfo: {
+    flex: 1,
+  },
+  maneuverText: {
+    fontFamily: FONTS.bold,
+    fontSize: 14,
+    color: COLORS.primary,
+  },
+  maneuverSubtext: {
+    fontFamily: FONTS.semibold,
+    fontSize: 11,
+    color: COLORS.textMuted,
+    marginTop: 1,
   },
   navCapsule: {
     backgroundColor: COLORS.primary,

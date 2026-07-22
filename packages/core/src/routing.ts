@@ -150,3 +150,83 @@ export function findRoute(start: LatLng, end: LatLng, mode: TransportMode = "wal
 
   return { polyline, distanceMeters: Math.round(distanceMeters), onNetwork: true };
 }
+
+export type ManeuverType = "straight" | "turn-left" | "turn-right" | "sharp-left" | "sharp-right" | "arrive";
+
+export interface Maneuver {
+  type: ManeuverType;
+  instruction: string;
+  distanceMeters: number;
+  location: LatLng;
+}
+
+function calculateBearing(start: LatLng, end: LatLng): number {
+  const startLat = (start.latitude * Math.PI) / 180;
+  const startLng = (start.longitude * Math.PI) / 180;
+  const endLat = (end.latitude * Math.PI) / 180;
+  const endLng = (end.longitude * Math.PI) / 180;
+
+  const dLng = endLng - startLng;
+  const y = Math.sin(dLng) * Math.cos(endLat);
+  const x =
+    Math.cos(startLat) * Math.sin(endLat) -
+    Math.sin(startLat) * Math.cos(endLat) * Math.cos(dLng);
+
+  const brng = (Math.atan2(y, x) * 180) / Math.PI;
+  return (brng + 360) % 360;
+}
+
+export function calculateManeuvers(polyline: LatLng[]): Maneuver[] {
+  if (polyline.length < 2) return [];
+
+  const maneuvers: Maneuver[] = [];
+  let currentDist = haversineMeters(polyline[0], polyline[1]);
+
+  for (let i = 0; i < polyline.length - 2; i++) {
+    const b1 = calculateBearing(polyline[i], polyline[i + 1]);
+    const b2 = calculateBearing(polyline[i + 1], polyline[i + 2]);
+    let diff = b2 - b1;
+
+    if (diff > 180) diff -= 360;
+    if (diff < -180) diff += 360;
+
+    let type: ManeuverType = "straight";
+    let instruction = "Continue straight";
+
+    if (diff > 60) {
+      type = "sharp-right";
+      instruction = "Turn sharp right";
+    } else if (diff > 25) {
+      type = "turn-right";
+      instruction = "Turn right";
+    } else if (diff < -60) {
+      type = "sharp-left";
+      instruction = "Turn sharp left";
+    } else if (diff < -25) {
+      type = "turn-left";
+      instruction = "Turn left";
+    }
+
+    if (type !== "straight") {
+      maneuvers.push({
+        type,
+        instruction,
+        distanceMeters: Math.round(currentDist),
+        location: polyline[i + 1],
+      });
+      currentDist = haversineMeters(polyline[i + 1], polyline[i + 2]);
+    } else {
+      currentDist += haversineMeters(polyline[i + 1], polyline[i + 2]);
+    }
+  }
+
+  const lastDist = haversineMeters(polyline[polyline.length - 2], polyline[polyline.length - 1]);
+  maneuvers.push({
+    type: "arrive",
+    instruction: "Arrive at destination",
+    distanceMeters: Math.round(lastDist),
+    location: polyline[polyline.length - 1],
+  });
+
+  return maneuvers;
+}
