@@ -234,6 +234,7 @@ export function calculateManeuvers(polyline: LatLng[]): Maneuver[] {
 
 export interface ActiveNavigationProgress {
   remainingPolyline: LatLng[];
+  traveledPolyline: LatLng[];
   remainingDistanceMeters: number;
   remainingEtaMinutes: number;
   distanceToRoute: number;
@@ -249,6 +250,7 @@ export function getRemainingRoute(
   if (!fullPolyline || fullPolyline.length < 2) {
     return {
       remainingPolyline: fullPolyline ? [...fullPolyline] : [],
+      traveledPolyline: [],
       remainingDistanceMeters: 0,
       remainingEtaMinutes: 0,
       distanceToRoute: 0,
@@ -277,6 +279,12 @@ export function getRemainingRoute(
   const distanceToRoute = Math.round(minSegDist);
   const isOffRoute = distanceToRoute > 30;
 
+  const traveledPolyline: LatLng[] = [];
+  for (let k = 0; k <= bestSegIndex; k++) {
+    traveledPolyline.push(fullPolyline[k]);
+  }
+  traveledPolyline.push(userPos);
+
   const remainingPolyline: LatLng[] = [userPos];
   for (let k = bestSegIndex + 1; k < fullPolyline.length; k++) {
     remainingPolyline.push(fullPolyline[k]);
@@ -294,6 +302,7 @@ export function getRemainingRoute(
 
   return {
     remainingPolyline,
+    traveledPolyline,
     remainingDistanceMeters,
     remainingEtaMinutes,
     distanceToRoute,

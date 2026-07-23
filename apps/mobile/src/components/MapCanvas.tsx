@@ -70,20 +70,35 @@ export function MapCanvas({ pois, onPoiPress, mapRef: externalMapRef }: MapCanva
     }
   }, [route, mapRef]);
 
-  // Dynamic camera follow during active navigation as user moves in transit
+  // Dynamic camera follow & heading orientation during active navigation as user moves in transit
   useEffect(() => {
     if (mode === "navigating" && currentPosition && mapRef.current) {
-      mapRef.current.animateToRegion(
-        {
-          latitude: currentPosition.latitude,
-          longitude: currentPosition.longitude,
-          latitudeDelta: 0.003,
-          longitudeDelta: 0.003,
-        },
-        500,
-      );
+      try {
+        mapRef.current.animateCamera(
+          {
+            center: {
+              latitude: currentPosition.latitude,
+              longitude: currentPosition.longitude,
+            },
+            zoom: 18,
+            heading: heading ?? 0,
+            pitch: 25,
+          },
+          { duration: 500 },
+        );
+      } catch {
+        mapRef.current.animateToRegion(
+          {
+            latitude: currentPosition.latitude,
+            longitude: currentPosition.longitude,
+            latitudeDelta: 0.003,
+            longitudeDelta: 0.003,
+          },
+          500,
+        );
+      }
     }
-  }, [mode, currentPosition, mapRef]);
+  }, [mode, currentPosition, heading, mapRef]);
 
   const navProgress =
     mode === "navigating" && currentPosition && route?.polyline && route.polyline.length >= 2
@@ -91,6 +106,7 @@ export function MapCanvas({ pois, onPoiPress, mapRef: externalMapRef }: MapCanva
       : null;
 
   const activePolyline = navProgress ? navProgress.remainingPolyline : (route?.polyline ?? []);
+  const traveledPolyline = navProgress ? navProgress.traveledPolyline : [];
 
   const activeMapType = mapStyle === "satellite" ? "hybrid" : "standard";
 
@@ -170,6 +186,15 @@ export function MapCanvas({ pois, onPoiPress, mapRef: externalMapRef }: MapCanva
           </Marker>
         );
       })}
+
+      {traveledPolyline.length >= 2 && mode === "navigating" ? (
+        <Polyline
+          coordinates={traveledPolyline}
+          strokeColor="rgba(148, 163, 184, 0.5)"
+          strokeWidth={3.5}
+          lineDashPattern={[6, 4]}
+        />
+      ) : null}
 
       {activePolyline.length >= 2 && mode === "navigating" ? (
         <Polyline
