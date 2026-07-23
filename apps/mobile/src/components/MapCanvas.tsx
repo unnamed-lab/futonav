@@ -8,6 +8,7 @@ import { useSettingsStore } from "../stores/useSettingsStore";
 import { COLORS, FONTS, SHADOWS, MAP_STYLE_JSON, CATEGORY_THEMES } from "../theme/theme";
 import { Ionicons } from "@expo/vector-icons";
 
+import { getRemainingRoute } from "@futonav/core";
 import { useLocationStore } from "../stores/useLocationStore";
 
 interface MapCanvasProps {
@@ -31,7 +32,7 @@ const getShortName = (poi: Poi) => {
 };
 
 export function MapCanvas({ pois, onPoiPress, mapRef: externalMapRef }: MapCanvasProps) {
-  const { route, mode, selectedPoi } = useNavStore();
+  const { route, mode, selectedPoi, transportMode } = useNavStore();
   const mapStyle = useSettingsStore((s) => s.mapStyle);
   const currentPosition = useLocationStore((s) => s.currentPosition);
   const heading = useLocationStore((s) => s.heading);
@@ -59,7 +60,7 @@ export function MapCanvas({ pois, onPoiPress, mapRef: externalMapRef }: MapCanva
     }
   }, [selectedPoi, mapRef]);
 
-  // Auto-bounding map camera to fit navigation polyline
+  // Auto-bounding map camera to fit navigation polyline on start
   useEffect(() => {
     if (route && route.polyline.length > 0 && mapRef.current) {
       mapRef.current.fitToCoordinates(route.polyline, {
@@ -68,6 +69,28 @@ export function MapCanvas({ pois, onPoiPress, mapRef: externalMapRef }: MapCanva
       });
     }
   }, [route, mapRef]);
+
+  // Dynamic camera follow during active navigation as user moves in transit
+  useEffect(() => {
+    if (mode === "navigating" && currentPosition && mapRef.current) {
+      mapRef.current.animateToRegion(
+        {
+          latitude: currentPosition.latitude,
+          longitude: currentPosition.longitude,
+          latitudeDelta: 0.003,
+          longitudeDelta: 0.003,
+        },
+        500,
+      );
+    }
+  }, [mode, currentPosition, mapRef]);
+
+  const navProgress =
+    mode === "navigating" && currentPosition && route?.polyline && route.polyline.length >= 2
+      ? getRemainingRoute(currentPosition, route.polyline, transportMode)
+      : null;
+
+  const activePolyline = navProgress ? navProgress.remainingPolyline : (route?.polyline ?? []);
 
   const activeMapType = mapStyle === "satellite" ? "hybrid" : "standard";
 
@@ -148,9 +171,9 @@ export function MapCanvas({ pois, onPoiPress, mapRef: externalMapRef }: MapCanva
         );
       })}
 
-      {route && mode === "navigating" ? (
+      {activePolyline.length >= 2 && mode === "navigating" ? (
         <Polyline
-          coordinates={route.polyline}
+          coordinates={activePolyline}
           strokeColor={COLORS.accent}
           strokeWidth={5}
         />

@@ -1,11 +1,10 @@
 import { View, Text, TouchableOpacity, StyleSheet, Share } from "react-native";
 import type { Poi, PoiCategoryType } from "@futonav/shared";
-import { formatDistance, calculateEtaMinutes, haversineMeters } from "@futonav/core";
+import { formatDistance, calculateEtaMinutes, haversineMeters, getRemainingRoute } from "@futonav/core";
 import { useLocationStore } from "../stores/useLocationStore";
 import { useNavStore } from "../stores/useNavStore";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS, FONTS, SHADOWS, CATEGORY_THEMES } from "../theme/theme";
-
 import { useFavoritesStore } from "../stores/useFavoritesStore";
 
 interface PoiCardProps {
@@ -31,6 +30,11 @@ export function PoiCard({ poi, onEnd }: PoiCardProps) {
     }
   };
 
+  const navProgress =
+    currentPosition && route?.polyline && route.polyline.length >= 2
+      ? getRemainingRoute(currentPosition, route.polyline, transportMode)
+      : null;
+
   const straightLineDist = currentPosition
     ? haversineMeters(
         { latitude: currentPosition.latitude, longitude: currentPosition.longitude },
@@ -38,8 +42,8 @@ export function PoiCard({ poi, onEnd }: PoiCardProps) {
       )
     : 0;
 
-  const displayDist = route ? route.distanceMeters : straightLineDist;
-  const displayEta = route ? route.etaMinutes : calculateEtaMinutes(straightLineDist, transportMode);
+  const displayDist = navProgress ? navProgress.remainingDistanceMeters : (route ? route.distanceMeters : straightLineDist);
+  const displayEta = navProgress ? navProgress.remainingEtaMinutes : (route ? route.etaMinutes : calculateEtaMinutes(straightLineDist, transportMode));
 
   const theme = CATEGORY_THEMES[poi.category as PoiCategoryType] || CATEGORY_THEMES.Other;
 

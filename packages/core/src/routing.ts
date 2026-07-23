@@ -1,7 +1,8 @@
-import { haversineMeters } from "./haversine";
+import { haversineMeters, distanceToSegment, projectPointOntoSegment } from "./haversine";
 import type { LatLng } from "./haversine";
 import campusGraph from "./data/campusGraph.json";
 import type { TransportMode } from "@futonav/shared";
+import { calculateEtaMinutes } from "./eta";
 
 export interface RouteResult {
   polyline: LatLng[];
@@ -229,4 +230,74 @@ export function calculateManeuvers(polyline: LatLng[]): Maneuver[] {
   });
 
   return maneuvers;
+}
+
+export interface ActiveNavigationProgress {
+  remainingPolyline: LatLng[];
+  remainingDistanceMeters: number;
+  remainingEtaMinutes: number;
+  distanceToRoute: number;
+  isOffRoute: boolean;
+  nextManeuver: Maneuver | null;
+}
+
+export function getRemainingRoute(
+  userPos: LatLng,
+  fullPolyline: LatLng[],
+  mode: TransportMode = "walking",
+): ActiveNavigationProgress {
+  if (!fullPolyline || fullPolyline.length < 2) {
+    return {
+      remainingPolyline: fullPolyline ? [...fullPolyline] : [],
+      remainingDistanceMeters: 0,
+      remainingEtaMinutes: 0,
+      distanceToRoute: 0,
+      isOffRoute: false,
+      nextManeuver: null,
+    };
+  }
+
+  let minSegDist = Infinity;
+  let bestSegIndex = 0;
+  let bestProj: LatLng = fullPolyline[0];
+
+  for (let i = 0; i < fullPolyline.length - 1; i++) {
+    const a = fullPolyline[i];
+    const b = fullPolyline[i + 1];
+    const proj = projectPointOntoSegment(userPos, a, b);
+    const segDist = haversineMeters(userPos, proj);
+
+    if (segDist < minSegDist) {
+      minSegDist = segDist;
+      bestSegIndex = i;
+      bestProj = proj;
+    }
+  }
+
+  const distanceToRoute = Math.round(minSegDist);
+  const isOffRoute = distanceToRoute > 30;
+
+  const remainingPolyline: LatLng[] = [userPos];
+  for (let k = bestSegIndex + 1; k < fullPolyline.length; k++) {
+    remainingPolyline.push(fullPolyline[k]);
+  }
+
+  let remainingDistanceMeters = 0;
+  for (let k = 0; k < remainingPolyline.length - 1; k++) {
+    remainingDistanceMeters += haversineMeters(remainingPolyline[k], remainingPolyline[k + 1]);
+  }
+  remainingDistanceMeters = Math.round(remainingDistanceMeters);
+
+  const remainingEtaMinutes = calculateEtaMinutes(remainingDistanceMeters, mode);
+  const maneuvers = calculateManeuvers(remainingPolyline);
+  const nextManeuver = maneuvers.length > 0 ? maneuvers[0] : null;
+
+  return {
+    remainingPolyline,
+    remainingDistanceMeters,
+    remainingEtaMinutes,
+    distanceToRoute,
+    isOffRoute,
+    nextManeuver,
+  };
 }

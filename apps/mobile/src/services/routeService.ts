@@ -49,13 +49,16 @@ export async function resolveRoute(
   start: LatLng,
   end: LatLng,
   mode: TransportMode,
+  forceFresh = false,
 ): Promise<ResolvedRoute | null> {
   const key = routeKey(start, end, mode);
 
-  const cached = await getCachedRoute(key).catch(() => null);
-  if (cached && Date.now() - cached.createdAt < CACHE_TTL_MS) {
-    const stored = safeParse(cached.data);
-    if (stored) return { ...stored, source: "cache" };
+  if (!forceFresh) {
+    const cached = await getCachedRoute(key).catch(() => null);
+    if (cached && Date.now() - cached.createdAt < CACHE_TTL_MS) {
+      const stored = safeParse(cached.data);
+      if (stored) return { ...stored, source: "cache" };
+    }
   }
 
   const google = await fetchGoogleRoute(start, end, mode);
@@ -71,9 +74,12 @@ export async function resolveRoute(
   }
 
   // Network failed — replay a stale cached route if we have one (offline nav).
-  if (cached) {
-    const stored = safeParse(cached.data);
-    if (stored) return { ...stored, source: "offline-cache" };
+  if (!forceFresh) {
+    const cached = await getCachedRoute(key).catch(() => null);
+    if (cached) {
+      const stored = safeParse(cached.data);
+      if (stored) return { ...stored, source: "offline-cache" };
+    }
   }
 
   // Last resort: the offline OSM campus graph, but only when it genuinely

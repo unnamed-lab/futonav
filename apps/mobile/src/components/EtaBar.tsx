@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet } from "react-native";
-import { formatDistance, calculateEtaMinutes, haversineMeters, calculateManeuvers } from "@futonav/core";
+import { formatDistance, calculateEtaMinutes, haversineMeters, getRemainingRoute } from "@futonav/core";
 import { ROAD_DISTANCE_FACTOR } from "@futonav/shared";
 import { useLocationStore } from "../stores/useLocationStore";
 import { useNavStore } from "../stores/useNavStore";
@@ -30,18 +30,21 @@ export function EtaBar() {
     );
   }
 
+  const navProgress =
+    route?.polyline && route.polyline.length >= 2
+      ? getRemainingRoute(currentPosition, route.polyline, transportMode)
+      : null;
+
   const straightLineDist = haversineMeters(
     { latitude: currentPosition.latitude, longitude: currentPosition.longitude },
     { latitude: selectedPoi.latitude, longitude: selectedPoi.longitude },
   );
   const estimatedRoadDist = straightLineDist * ROAD_DISTANCE_FACTOR;
 
-  const displayDist = route ? route.distanceMeters : estimatedRoadDist;
-  const displayEta = route ? route.etaMinutes : calculateEtaMinutes(estimatedRoadDist, transportMode);
+  const displayDist = navProgress ? navProgress.remainingDistanceMeters : (route ? route.distanceMeters : estimatedRoadDist);
+  const displayEta = navProgress ? navProgress.remainingEtaMinutes : (route ? route.etaMinutes : calculateEtaMinutes(estimatedRoadDist, transportMode));
+  const nextManeuver = navProgress ? navProgress.nextManeuver : null;
   const isOffline = route?.source === "offline-cache" || route?.source === "offline-graph";
-
-  const maneuvers = route?.polyline && route.polyline.length >= 2 ? calculateManeuvers(route.polyline) : [];
-  const nextManeuver = maneuvers.length > 0 ? maneuvers[0] : null;
 
   const getManeuverIcon = (type: string) => {
     switch (type) {
