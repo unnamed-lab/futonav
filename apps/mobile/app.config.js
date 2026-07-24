@@ -22,6 +22,7 @@ module.exports = () => ({
     infoPlist: {
       NSLocationWhenInUseUsageDescription:
         "FutoNav uses your location to show you on the campus map and calculate walking distances.",
+      ITSAppUsesNonExemptEncryption: false,
     },
   },
   android: {
