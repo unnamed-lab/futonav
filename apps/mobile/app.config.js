@@ -1,6 +1,4 @@
-import type { ExpoConfig } from "expo/config";
-
-export default (): ExpoConfig => ({
+module.exports = () => ({
   name: "FutoNav",
   slug: "futonav",
   scheme: "futonav",
