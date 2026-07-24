@@ -11,10 +11,16 @@ const BUCKET = process.env.SUPABASE_STORAGE_BUCKET || "futonavapp";
 const MIME_EXTENSIONS: Record<string, string> = {
   "image/jpeg": "jpg",
   "image/jpg": "jpg",
+  "image/pjpeg": "jpg",
   "image/png": "png",
   "image/webp": "webp",
   "image/gif": "gif",
   "image/avif": "avif",
+  "image/heic": "heic",
+  "image/heif": "heif",
+  "image/bmp": "bmp",
+  "image/tiff": "tiff",
+  "image/svg+xml": "svg",
 };
 
 /**
@@ -68,9 +74,13 @@ export interface SignedImageUpload {
  * and never exposes the service key to the client.
  */
 export async function createSignedImageUpload(mimeType: string): Promise<SignedImageUpload> {
-  const ext = MIME_EXTENSIONS[mimeType];
+  const cleanMime = (mimeType || "").toLowerCase().split(";")[0].trim();
+  const ext =
+    MIME_EXTENSIONS[cleanMime] ||
+    (cleanMime.startsWith("image/") ? cleanMime.split("/")[1]?.replace(/[^a-z0-9]/g, "") || "jpg" : null);
+
   if (!ext) {
-    throw new Error("Unsupported image type. Use JPEG, PNG, WebP, GIF or AVIF.");
+    throw new Error("Unsupported image format. Please select a valid image file (JPEG, PNG, HEIC, WebP, etc.).");
   }
 
   const token = serviceToken();

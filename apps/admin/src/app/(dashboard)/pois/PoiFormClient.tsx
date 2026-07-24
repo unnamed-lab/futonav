@@ -114,8 +114,11 @@ export default function PoiFormClient({ poi }: PoiFormClientProps) {
     e.target.value = "";
     if (!file) return;
 
-    if (!file.type.startsWith("image/")) {
-      setErrorMsg("Please choose an image file.");
+    const mimeType = (file.type || "").toLowerCase().split(";")[0].trim();
+    const isImageFile = mimeType.startsWith("image/") || /\.(jpg|jpeg|png|webp|gif|heic|heif|avif|bmp|tiff)$/i.test(file.name);
+
+    if (!isImageFile) {
+      setErrorMsg("Please choose a valid image file.");
       return;
     }
     if (file.size > 10 * 1024 * 1024) {
@@ -126,13 +129,12 @@ export default function PoiFormClient({ poi }: PoiFormClientProps) {
     setUploading(true);
     setErrorMsg("");
     try {
-      // Get a signed URL from the server (tiny request), then upload the bytes
-      // straight to Supabase Storage from the browser — this bypasses the
-      // serverless request-body limit so large images work.
-      const { uploadUrl, publicUrl } = await createImageUploadUrlAction(file.type);
+      // Get a signed URL from the server, defaulting to image/jpeg if mobile file picker omits file.type
+      const effectiveMime = mimeType.startsWith("image/") ? mimeType : "image/jpeg";
+      const { uploadUrl, publicUrl } = await createImageUploadUrlAction(effectiveMime);
       const res = await fetch(uploadUrl, {
         method: "PUT",
-        headers: { "content-type": file.type, "x-upsert": "true" },
+        headers: { "content-type": file.type || effectiveMime, "x-upsert": "true" },
         body: file,
       });
       if (!res.ok) {
@@ -194,7 +196,7 @@ export default function PoiFormClient({ poi }: PoiFormClientProps) {
       <div className="flex items-center gap-4">
         <Link
           href="/pois"
-          className="p-2.5 rounded-xl bg-white border border-slate-200/80 text-slate-500 hover:text-slate-800 hover:bg-slate-55 transition-colors shadow-2xs cursor-pointer border border-transparent hover:border-slate-200"
+          className="p-2.5 rounded-xl bg-white border border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
         >
           <ArrowLeft className="h-4.5 w-4.5" />
         </Link>
@@ -209,7 +211,7 @@ export default function PoiFormClient({ poi }: PoiFormClientProps) {
       </div>
 
       {errorMsg && (
-        <div className="rounded-xl border border-red-250 bg-red-50 p-4 text-sm font-bold text-red-800 animate-fadeIn">
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-800 animate-fadeIn">
           {errorMsg}
         </div>
       )}
@@ -304,16 +306,16 @@ export default function PoiFormClient({ poi }: PoiFormClientProps) {
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploading}
-                className="w-full inline-flex items-center justify-center gap-2.5 px-4 py-3 bg-slate-50 border border-dashed border-slate-300 rounded-xl text-sm font-semibold text-slate-650 hover:bg-slate-100 hover:border-slate-400 transition-all cursor-pointer disabled:opacity-60"
+                className="w-full inline-flex items-center justify-center gap-2.5 px-4 py-3 bg-slate-50 border border-dashed border-slate-300 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 hover:border-slate-400 transition-all cursor-pointer disabled:opacity-60"
               >
                 {uploading ? (
                   <>
-                    <Loader2 className="h-4.5 w-4.5 animate-spin text-teal-605" />
+                    <Loader2 className="h-4.5 w-4.5 animate-spin text-teal-600" />
                     <span>Uploading…</span>
                   </>
                 ) : (
                   <>
-                    <ImagePlus className="h-4.5 w-4.5 text-teal-650 animate-scale-pulse" />
+                    <ImagePlus className="h-4.5 w-4.5 text-teal-600 animate-scale-pulse" />
                     <span>{formData.imageUrl ? "Replace uploaded image" : "Choose image file"}</span>
                   </>
                 )}
@@ -348,7 +350,7 @@ export default function PoiFormClient({ poi }: PoiFormClientProps) {
                 type="button"
                 onClick={handleRemoveImage}
                 title="Remove image"
-                className="absolute top-3 right-3 inline-flex items-center justify-center h-8 w-8 rounded-full bg-white/90 border border-slate-200 text-slate-600 hover:text-red-650 hover:bg-white transition-colors cursor-pointer shadow-2xs"
+                className="absolute top-3 right-3 inline-flex items-center justify-center h-8 w-8 rounded-full bg-white/90 border border-slate-200 text-slate-600 hover:text-red-600 hover:bg-white transition-colors cursor-pointer shadow-2xs"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -359,7 +361,7 @@ export default function PoiFormClient({ poi }: PoiFormClientProps) {
         {/* Section 3: Telemetry */}
         <div className="space-y-4">
           <h3 className="font-bold text-xs uppercase tracking-widest text-slate-400 pb-2 border-b border-slate-100 flex items-center gap-2">
-            <MapPin className="h-4 w-4 text-teal-650" />
+            <MapPin className="h-4 w-4 text-teal-600" />
             <span>Geographical Telemetry</span>
           </h3>
 
@@ -374,7 +376,7 @@ export default function PoiFormClient({ poi }: PoiFormClientProps) {
                 disabled={locating}
                 className="inline-flex items-center gap-1.5 text-xs font-bold text-teal-700 bg-teal-50 border border-teal-200 hover:bg-teal-100/70 px-4 py-2.5 rounded-xl transition-all cursor-pointer disabled:opacity-50 active:scale-95 shadow-2xs"
               >
-                <Locate className={`h-4 w-4 ${locating ? "animate-spin text-teal-500" : "text-teal-650"}`} />
+                <Locate className={`h-4 w-4 ${locating ? "animate-spin text-teal-500" : "text-teal-600"}`} />
                 <span>{locating ? "Locating..." : "Use Current Location"}</span>
               </button>
             </div>
@@ -399,7 +401,7 @@ export default function PoiFormClient({ poi }: PoiFormClientProps) {
                   }`}
                 />
                 {isLatOutOfFuto && (
-                  <span className="text-[10px] text-amber-605 font-bold flex items-center gap-1 mt-1.5 leading-normal">
+                  <span className="text-[10px] text-amber-600 font-bold flex items-center gap-1 mt-1.5 leading-normal">
                     <AlertTriangle className="h-3 w-3 shrink-0" />
                     Outside FUTO boundary layout (5.37 to 5.41).
                   </span>
@@ -425,7 +427,7 @@ export default function PoiFormClient({ poi }: PoiFormClientProps) {
                   }`}
                 />
                 {isLngOutOfFuto && (
-                  <span className="text-[10px] text-amber-650 font-bold flex items-center gap-1 mt-1.5 leading-normal">
+                  <span className="text-[10px] text-amber-600 font-bold flex items-center gap-1 mt-1.5 leading-normal">
                     <AlertTriangle className="h-3 w-3 shrink-0" />
                     Outside FUTO boundary layout (6.98 to 7.02).
                   </span>
@@ -438,7 +440,7 @@ export default function PoiFormClient({ poi }: PoiFormClientProps) {
         {/* Section 4: Metadata & Indexing */}
         <div className="space-y-4">
           <h3 className="font-bold text-xs uppercase tracking-widest text-slate-400 pb-2 border-b border-slate-100 flex items-center gap-2">
-            <TagIcon className="h-4 w-4 text-teal-650" />
+            <TagIcon className="h-4 w-4 text-teal-600" />
             <span>Metadata & Fuzzy Indexing</span>
           </h3>
 
@@ -447,7 +449,7 @@ export default function PoiFormClient({ poi }: PoiFormClientProps) {
               <label htmlFor="tags" className="text-xs font-bold text-slate-500 uppercase tracking-wider block">
                 Fuzzy Search Tags
               </label>
-              <span className="inline-flex items-center gap-1 text-[9px] text-teal-700 bg-teal-55 px-2 py-0.5 rounded-md font-bold tracking-wide uppercase">
+              <span className="inline-flex items-center gap-1 text-[9px] text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md font-bold tracking-wide uppercase">
                 <Sparkles className="h-3 w-3 animate-pulse" />
                 Index Abbreviation keywords
               </span>
@@ -469,14 +471,14 @@ export default function PoiFormClient({ poi }: PoiFormClientProps) {
         <div className="flex items-center justify-end gap-3 pt-5 border-t border-slate-100">
           <Link
             href="/pois"
-            className="px-5 py-3 text-sm font-bold border border-slate-250 rounded-xl text-slate-550 hover:bg-slate-50 hover:text-slate-800 transition-colors cursor-pointer"
+            className="px-5 py-3 text-sm font-bold border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition-colors cursor-pointer"
           >
             Cancel
           </Link>
           <button
             type="submit"
             disabled={isPending}
-            className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-5 py-3 text-sm font-bold text-white hover:bg-teal-700 transition-all disabled:opacity-50 cursor-pointer shadow-md shadow-teal-650/10 hover:shadow-teal-500/20 active:scale-[0.98]"
+            className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-5 py-3 text-sm font-bold text-white hover:bg-teal-700 transition-all disabled:opacity-50 cursor-pointer shadow-md shadow-teal-600/10 hover:shadow-teal-500/20 active:scale-[0.98]"
           >
             <Save className="h-4.5 w-4.5" />
             <span>{isPending ? "Saving..." : "Save POI"}</span>

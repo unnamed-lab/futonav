@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -6,8 +7,9 @@ import { PoiImage } from "../../src/components/PoiImage";
 import { formatDistance, walkingEtaMinutes, haversineMeters } from "@futonav/core";
 import { useLocationStore } from "../../src/stores/useLocationStore";
 import { COLORS, FONTS, SHADOWS, CATEGORY_THEMES } from "../../src/theme/theme";
+import { getCachedPois } from "../../src/services/syncService";
 import { Ionicons } from "@expo/vector-icons";
-import type { PoiCategoryType } from "@futonav/shared";
+import type { Poi, PoiCategoryType } from "@futonav/shared";
 
 export default function PoiDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -16,7 +18,21 @@ export default function PoiDetailScreen() {
   const selectPoi = useNavStore((s) => s.selectPoi);
   const currentPosition = useLocationStore((s) => s.currentPosition);
 
-  const poi = selectedPoi;
+  const [poi, setPoi] = useState<Poi | null>(selectedPoi?.id === id ? selectedPoi : null);
+
+  useEffect(() => {
+    let active = true;
+    getCachedPois().then((all) => {
+      if (!active) return;
+      const found = all.find((p) => p.id === id);
+      if (found) {
+        setPoi(found);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, [id]);
 
   const dist =
     currentPosition && poi

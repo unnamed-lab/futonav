@@ -1,8 +1,9 @@
-import { useState } from "react";
-import { View, Image, ActivityIndicator, StyleSheet } from "react-native";
+import { useState, useEffect } from "react";
+import { View, Image, ActivityIndicator, StyleSheet, Platform } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import type { Poi, PoiCategoryType } from "@futonav/shared";
 import { COLORS, CATEGORY_THEMES } from "../theme/theme";
+import Constants from "expo-constants";
 
 interface PoiImageProps {
   poi: Poi;
@@ -11,6 +12,23 @@ interface PoiImageProps {
   borderRadius?: number;
   /** Shrinks the placeholder icon; useful for small thumbnails. */
   iconScale?: number;
+}
+
+/**
+ * Resolves local localhost URLs to reach host machine from emulator / device.
+ */
+function resolveImageUri(url: string | null): string | null {
+  if (!url) return null;
+  if (url.includes("localhost:54321") || url.includes("127.0.0.1:54321")) {
+    const host = process.env.EXPO_PUBLIC_SUPABASE_URL || Constants.expoConfig?.extra?.supabaseUrl;
+    if (host) {
+      return url.replace(/http:\/\/(localhost|127\.0\.0\.1):54321/, host.replace(/\/$/, ""));
+    }
+    if (Platform.OS === "android") {
+      return url.replace("localhost", "10.0.2.2").replace("127.0.0.1", "10.0.2.2");
+    }
+  }
+  return url;
 }
 
 /**
@@ -30,8 +48,15 @@ export function PoiImage({
   const [failed, setFailed] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  const imageUri = resolveImageUri(poi.imageUrl);
+
+  useEffect(() => {
+    setFailed(false);
+    setLoading(true);
+  }, [imageUri]);
+
   const theme = CATEGORY_THEMES[poi.category as PoiCategoryType] || CATEGORY_THEMES.Other;
-  const hasImage = !!poi.imageUrl && !failed;
+  const hasImage = !!imageUri && !failed;
 
   return (
     <View
@@ -44,7 +69,7 @@ export function PoiImage({
       {hasImage ? (
         <>
           <Image
-            source={{ uri: poi.imageUrl as string }}
+            source={{ uri: imageUri as string }}
             style={[styles.image, { borderRadius }]}
             resizeMode="cover"
             onLoadEnd={() => setLoading(false)}

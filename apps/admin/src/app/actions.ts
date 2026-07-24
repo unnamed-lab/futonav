@@ -76,6 +76,7 @@ export async function savePoiAction(formData: {
     description: parsed.description,
     tags: parsed.tags as string[],
     imageUrl: parsed.imageUrl,
+    updatedAt: new Date().toISOString(),
   });
 
   // Remove the old storage object if the image changed or was cleared.
