@@ -16,9 +16,6 @@ module.exports = () => ({
   ios: {
     supportsTablet: true,
     bundleIdentifier: "com.unnamedcodes.futonav",
-    config: {
-      googleMapsApiKey: process.env.GOOGLE_MAPS_IOS_KEY || process.env.EXPO_PUBLIC_GOOGLE_MAPS_KEY,
-    },
     infoPlist: {
       NSLocationWhenInUseUsageDescription:
         "FutoNav uses your location to show you on the campus map and calculate walking distances.",
