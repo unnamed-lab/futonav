@@ -1,7 +1,6 @@
 import { getSupabaseClient, createPoiRepository, resetClient } from "@futonav/api-client";
 import { signJwt } from "./jwt";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "http://localhost:54321";
 const jwtSecret = process.env.JWT_SECRET || "super-secret-jwt-token-with-at-least-32-characters-long";
 
 // Generate a JWT signed as the superuser postgres role to bypass RLS in PostgREST
@@ -22,6 +21,7 @@ export function getAdminToken(): string {
 }
 
 export function getAdminPoiRepository() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "http://localhost:54321";
   // Always reset client to ensure we use the admin token
   resetClient();
   const client = getSupabaseClient(supabaseUrl, getAdminToken());

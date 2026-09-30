@@ -2,7 +2,9 @@ import "server-only";
 import { randomUUID } from "crypto";
 import { signJwt } from "./jwt";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "http://localhost:54321";
+function getSupabaseUrl(): string {
+  return process.env.NEXT_PUBLIC_SUPABASE_URL || "http://localhost:54321";
+}
 const jwtSecret = process.env.JWT_SECRET || "super-secret-jwt-token-with-at-least-32-characters-long";
 
 // Public bucket that holds admin-uploaded POI/building images.
@@ -43,12 +45,12 @@ function authHeaders(token: string): Record<string, string> {
 
 /** Creates the public image bucket on first use if it doesn't already exist. */
 async function ensureBucket(token: string): Promise<void> {
-  const check = await fetch(`${supabaseUrl}/storage/v1/bucket/${BUCKET}`, {
+  const check = await fetch(`${getSupabaseUrl()}/storage/v1/bucket/${BUCKET}`, {
     headers: authHeaders(token),
   });
   if (check.ok) return;
 
-  const create = await fetch(`${supabaseUrl}/storage/v1/bucket`, {
+  const create = await fetch(`${getSupabaseUrl()}/storage/v1/bucket`, {
     method: "POST",
     headers: { ...authHeaders(token), "Content-Type": "application/json" },
     body: JSON.stringify({ id: BUCKET, name: BUCKET, public: true }),
@@ -87,7 +89,7 @@ export async function createSignedImageUpload(mimeType: string): Promise<SignedI
   await ensureBucket(token);
 
   const path = `${randomUUID()}.${ext}`;
-  const res = await fetch(`${supabaseUrl}/storage/v1/object/upload/sign/${BUCKET}/${path}`, {
+  const res = await fetch(`${getSupabaseUrl()}/storage/v1/object/upload/sign/${BUCKET}/${path}`, {
     method: "POST",
     headers: authHeaders(token),
   });
@@ -104,8 +106,8 @@ export async function createSignedImageUpload(mimeType: string): Promise<SignedI
 
   const relative = data.url.startsWith("/") ? data.url : `/${data.url}`;
   return {
-    uploadUrl: `${supabaseUrl}/storage/v1${relative}`,
-    publicUrl: `${supabaseUrl}/storage/v1/object/public/${BUCKET}/${path}`,
+    uploadUrl: `${getSupabaseUrl()}/storage/v1${relative}`,
+    publicUrl: `${getSupabaseUrl()}/storage/v1/object/public/${BUCKET}/${path}`,
   };
 }
 
@@ -123,7 +125,7 @@ export async function deletePoiImage(imageUrl: string): Promise<void> {
   if (!path) return;
 
   const token = serviceToken();
-  const res = await fetch(`${supabaseUrl}/storage/v1/object/${BUCKET}/${path}`, {
+  const res = await fetch(`${getSupabaseUrl()}/storage/v1/object/${BUCKET}/${path}`, {
     method: "DELETE",
     headers: authHeaders(token),
   });
